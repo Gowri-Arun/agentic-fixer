@@ -104,4 +104,53 @@ def test_analyze_detects_faq_issue(monkeypatch):
     issue_ids = [i["id"] for i in data["issues"]]
     assert "missing_faq_schema" in issue_ids
     assert data["score"] < 100
-    assert data["fixes"] == []
+    assert len(data["fixes"]) > 0
+
+    faq_fix = next(f for f in data["fixes"] if f["issue_id"] == "missing_faq_schema")
+    assert "FAQPage" in faq_fix["code_snippet"]
+    assert "next/script" in faq_fix["code_snippet"]
+
+
+def test_analyze_fixes_differ_by_target_stack(monkeypatch):
+    def mock_fetch_html(url: str) -> str:
+        return """
+        <html>
+        <body>
+            <h1>FAQ</h1>
+            <p>Here are some frequently asked questions</p>
+        </body>
+        </html>
+        """
+
+    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+
+    response_nextjs = client.post(
+        "/analyze",
+        json={
+            "url": "https://example.com/faq",
+            "target_stack": "nextjs-13",
+        },
+    )
+
+    response_plain = client.post(
+        "/analyze",
+        json={
+            "url": "https://example.com/faq",
+            "target_stack": "plain-html",
+        },
+    )
+
+    assert response_nextjs.status_code == 200
+    assert response_plain.status_code == 200
+
+    nextjs_fixes = response_nextjs.json()["fixes"]
+    plain_fixes = response_plain.json()["fixes"]
+
+    assert len(nextjs_fixes) > 0
+    assert len(plain_fixes) > 0
+
+    nextjs_snippet = nextjs_fixes[0]["code_snippet"]
+    plain_snippet = plain_fixes[0]["code_snippet"]
+    assert nextjs_snippet != plain_snippet
+    assert "next/script" in nextjs_snippet
+    assert '<script type="application/ld+json">' in plain_snippet
