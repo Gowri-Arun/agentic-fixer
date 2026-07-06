@@ -19,6 +19,7 @@ def parse_html(html: str) -> dict:
             )
 
     json_ld = []
+    invalid_json_ld_count = 0
     for script in soup.find_all("script", type="application/ld+json"):
         raw_json = script.string
         if not raw_json:
@@ -27,10 +28,13 @@ def parse_html(html: str) -> dict:
         try:
             json_ld.append(json.loads(raw_json))
         except json.JSONDecodeError:
+            invalid_json_ld_count += 1
             continue
 
     return {
         "text": text,
+        "text_lower": text.lower(),
         "headings": headings,
         "json_ld": json_ld,
+        "invalid_json_ld_count": invalid_json_ld_count,
     }

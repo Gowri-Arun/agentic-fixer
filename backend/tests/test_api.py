@@ -75,3 +75,33 @@ def test_fetch_failure_returns_400(monkeypatch):
 
     assert response.status_code == 400
     assert "Failed to fetch URL" in response.json()["detail"]
+
+
+def test_analyze_detects_faq_issue(monkeypatch):
+    def mock_fetch_html(url: str) -> str:
+        return """
+        <html>
+        <body>
+            <h1>FAQ</h1>
+            <p>Here are some frequently asked questions</p>
+        </body>
+        </html>
+        """
+
+    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+
+    response = client.post(
+        "/analyze",
+        json={
+            "url": "https://example.com/faq",
+            "target_stack": "nextjs-13",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+    issue_ids = [i["id"] for i in data["issues"]]
+    assert "missing_faq_schema" in issue_ids
+    assert data["score"] < 100
+    assert data["fixes"] == []
