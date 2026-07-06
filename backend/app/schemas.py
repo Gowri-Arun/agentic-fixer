@@ -47,3 +47,15 @@ class AnalyzeResponse(BaseModel):
     fixes: list[Fix]
     metadata: AuditMetadata
     markdown_report: str
+
+
+class ExamplePage(BaseModel):
+    id: str
+    title: str
+    description: str
+    expected_issues: list[str]
+
+
+class DemoAnalyzeRequest(BaseModel):
+    example_id: str
+    target_stack: TargetStack
