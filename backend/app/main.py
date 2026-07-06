@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.detectors.runner import run_detectors
 from app.fetcher import FetchError, fetch_html
+from app.fixes.registry import generate_fixes
 from app.parser import parse_html
 from app.schemas import AnalyzeRequest, AnalyzeResponse
 from app.scoring import calculate_score
@@ -45,9 +46,10 @@ def analyze_page(request: AnalyzeRequest):
 
     issues = run_detectors(parsed, location)
     score = calculate_score(issues)
+    fixes = generate_fixes(issues, request.target_stack)
 
     return AnalyzeResponse(
         score=score,
         issues=issues,
-        fixes=[],
+        fixes=fixes,
     )
