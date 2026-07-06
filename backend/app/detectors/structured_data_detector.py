@@ -8,7 +8,10 @@ def detect_invalid_json_ld(parsed: dict, location: str) -> list[Issue]:
                 id="invalid_json_ld",
                 severity="medium",
                 location=location,
-                description="One or more JSON-LD structured data blocks could not be parsed as valid JSON.",
+                description=(
+                    "One or more JSON-LD structured data blocks could"
+                    " not be parsed as valid JSON."
+                ),
             )
         ]
     return []

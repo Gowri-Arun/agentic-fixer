@@ -44,7 +44,11 @@ def detect_missing_policy_surface(parsed: dict, location: str) -> list[Issue]:
                 id="missing_policy_surface",
                 severity="medium",
                 location=location,
-                description="Commercial intent was detected, but refund, returns, shipping, privacy, terms, or cancellation information is not clearly surfaced.",
+                description=(
+                    "Commercial intent was detected, but refund, returns,"
+                    " shipping, privacy, terms, or cancellation"
+                    " information is not clearly surfaced."
+                ),
             )
         ]
     return []

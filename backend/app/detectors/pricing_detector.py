@@ -32,15 +32,15 @@ def _has_pricing_content(parsed: dict) -> bool:
     text_lower = parsed.get("text_lower", "")
 
     has_keyword = any(kw in text_lower for kw in PRICING_KEYWORDS)
-    has_currency = any(re.search(pat, parsed.get("text", "")) for pat in CURRENCY_PATTERNS)
+    has_currency = any(
+        re.search(pat, parsed.get("text", "")) for pat in CURRENCY_PATTERNS
+    )
 
     return has_keyword and has_currency
 
 
 def _has_product_or_service_schema(parsed: dict) -> bool:
-    return json_ld_contains_type(
-        parsed.get("json_ld", []), {"Product", "Service"}
-    )
+    return json_ld_contains_type(parsed.get("json_ld", []), {"Product", "Service"})
 
 
 def detect_pricing_without_schema(parsed: dict, location: str) -> list[Issue]:
@@ -50,7 +50,11 @@ def detect_pricing_without_schema(parsed: dict, location: str) -> list[Issue]:
                 id="missing_product_or_service_schema",
                 severity="high",
                 location=location,
-                description="Pricing or commercial offering content was detected, but no Product or Service JSON-LD structured data was found.",
+                description=(
+                    "Pricing or commercial offering content was detected,"
+                    " but no Product or Service JSON-LD structured"
+                    " data was found."
+                ),
             )
         ]
     return []

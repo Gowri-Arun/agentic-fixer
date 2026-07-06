@@ -37,7 +37,10 @@ def detect_faq_without_schema(parsed: dict, location: str) -> list[Issue]:
                 id="missing_faq_schema",
                 severity="high",
                 location=location,
-                description="FAQ content was detected, but no FAQPage JSON-LD structured data was found.",
+                description=(
+                    "FAQ content was detected, but no FAQPage JSON-LD"
+                    " structured data was found."
+                ),
             )
         ]
     return []

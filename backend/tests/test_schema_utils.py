@@ -68,7 +68,5 @@ def test_multiple_expected_types():
 
 
 def test_nested_graph_in_list():
-    objects = [
-        [{"@graph": [{"@type": "FAQPage"}]}]
-    ]
+    objects = [[{"@graph": [{"@type": "FAQPage"}]}]]
     assert json_ld_contains_type(objects, {"FAQPage"}) is True

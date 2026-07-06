@@ -13,7 +13,10 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
                 id="missing_h1",
                 severity="medium",
                 location=location,
-                description="No H1 heading was found. Agents and search engines may struggle to identify the main topic of the page.",
+                description=(
+                    "No H1 heading was found. Agents and search engines"
+                    " may struggle to identify the main topic of the page."
+                ),
             )
         )
 
@@ -23,7 +26,10 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
                 id="multiple_h1",
                 severity="medium",
                 location=location,
-                description="Multiple H1 headings were found. This can make the main topic of the page ambiguous.",
+                description=(
+                    "Multiple H1 headings were found. This can make the"
+                    " main topic of the page ambiguous."
+                ),
             )
         )
 
@@ -39,7 +45,10 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
                 id="heading_hierarchy_jump",
                 severity="low",
                 location=location,
-                description="A heading hierarchy jump was found, such as moving from H2 to H4 without an intermediate H3.",
+                description=(
+                    "A heading hierarchy jump was found, such as moving"
+                    " from H2 to H4 without an intermediate H3."
+                ),
             )
         )
 

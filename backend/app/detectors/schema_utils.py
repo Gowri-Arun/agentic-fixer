@@ -15,9 +15,7 @@ def _extract_types(obj: object) -> set[str]:
     return set()
 
 
-def json_ld_contains_type(
-    json_ld_objects: list, expected_types: set[str]
-) -> bool:
+def json_ld_contains_type(json_ld_objects: list, expected_types: set[str]) -> bool:
     """Check if any JSON-LD object contains one of the expected @type values.
 
     Supports:
