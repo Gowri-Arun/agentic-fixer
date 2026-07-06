@@ -12,6 +12,7 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="missing_h1",
                 severity="medium",
+                category="document_structure",
                 location=location,
                 description=(
                     "No H1 heading was found. Agents and search engines"
@@ -25,6 +26,7 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="multiple_h1",
                 severity="medium",
+                category="document_structure",
                 location=location,
                 description=(
                     "Multiple H1 headings were found. This can make the"
@@ -44,6 +46,7 @@ def detect_heading_issues(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="heading_hierarchy_jump",
                 severity="low",
+                category="document_structure",
                 location=location,
                 description=(
                     "A heading hierarchy jump was found, such as moving"

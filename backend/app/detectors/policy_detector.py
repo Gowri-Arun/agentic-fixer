@@ -43,6 +43,7 @@ def detect_missing_policy_surface(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="missing_policy_surface",
                 severity="medium",
+                category="commercial_trust",
                 location=location,
                 description=(
                     "Commercial intent was detected, but refund, returns,"

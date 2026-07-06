@@ -49,6 +49,7 @@ def detect_pricing_without_schema(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="missing_product_or_service_schema",
                 severity="high",
+                category="structured_data",
                 location=location,
                 description=(
                     "Pricing or commercial offering content was detected,"

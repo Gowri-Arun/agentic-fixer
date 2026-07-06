@@ -4,6 +4,7 @@ _FIXES: dict[str, Fix] = {
     "missing_faq_schema": Fix(
         issue_id="missing_faq_schema",
         title="Add FAQ JSON-LD schema to the page",
+        priority="high",
         why_it_matters=(
             "FAQPage structured data helps agents and search engines "
             "understand question-answer content reliably."
@@ -54,6 +55,7 @@ export default function PricingPage() {
     "missing_product_or_service_schema": Fix(
         issue_id="missing_product_or_service_schema",
         title="Add Product or Service JSON-LD schema to the page",
+        priority="high",
         why_it_matters=(
             "Product or Service structured data helps agents "
             "understand what is being offered and how to describe it."
@@ -102,6 +104,7 @@ export default function PricingPage() {
     "missing_policy_surface": Fix(
         issue_id="missing_policy_surface",
         title="Add visible policy and trust information section",
+        priority="medium",
         why_it_matters=(
             "Users and agents need clear access to refund, "
             "returns, privacy, and terms information to build trust."
@@ -127,6 +130,7 @@ export default function PricingPage() {
     "missing_h1": Fix(
         issue_id="missing_h1",
         title="Add a primary heading to the page",
+        priority="medium",
         why_it_matters=(
             "A single H1 helps agents and search engines "
             "identify the main topic of the page quickly."
@@ -141,6 +145,7 @@ export default function PricingPage() {
     "multiple_h1": Fix(
         issue_id="multiple_h1",
         title="Consolidate headings into a single H1",
+        priority="medium",
         why_it_matters=(
             "Multiple H1 tags make the main topic ambiguous "
             "for agents and search engines."
@@ -157,6 +162,7 @@ export default function PricingPage() {
     "heading_hierarchy_jump": Fix(
         issue_id="heading_hierarchy_jump",
         title="Fix heading hierarchy to avoid skipped levels",
+        priority="low",
         why_it_matters=(
             "Heading hierarchy jumps confuse agents that rely "
             "on document structure to understand content relationships."
@@ -173,6 +179,7 @@ export default function PricingPage() {
     "invalid_json_ld": Fix(
         issue_id="invalid_json_ld",
         title="Replace invalid JSON-LD with valid structured data",
+        priority="medium",
         why_it_matters=(
             "Invalid JSON-LD blocks are ignored by agents and "
             "search engines, wasting the opportunity to provide "
