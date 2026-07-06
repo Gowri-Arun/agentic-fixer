@@ -62,3 +62,53 @@ def test_parser_ignores_invalid_json_ld():
 
     assert parsed["json_ld"] == []
     assert "Test" in parsed["text"]
+
+
+def test_parser_text_lower_is_lowercase():
+    html = "<html><body><h1>Hello World</h1></body></html>"
+
+    parsed = parse_html(html)
+
+    assert parsed["text_lower"] == parsed["text"].lower()
+
+
+def test_parser_invalid_json_ld_increments_count():
+    html = """
+    <html>
+      <head>
+        <script type="application/ld+json">
+        { invalid json 1
+        </script>
+        <script type="application/ld+json">
+        { invalid json 2
+        </script>
+        <script type="application/ld+json">
+        {"@type": "FAQPage"}
+        </script>
+      </head>
+      <body></body>
+    </html>
+    """
+
+    parsed = parse_html(html)
+
+    assert parsed["invalid_json_ld_count"] == 2
+    assert len(parsed["json_ld"]) == 1
+
+
+def test_parser_valid_json_ld_not_in_invalid_count():
+    html = """
+    <html>
+      <head>
+        <script type="application/ld+json">
+        {"@type": "Product"}
+        </script>
+      </head>
+      <body></body>
+    </html>
+    """
+
+    parsed = parse_html(html)
+
+    assert parsed["invalid_json_ld_count"] == 0
+    assert len(parsed["json_ld"]) == 1

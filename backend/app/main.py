@@ -1,6 +1,9 @@
+from urllib.parse import urlparse
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.detectors.runner import run_detectors
 from app.fetcher import FetchError, fetch_html
 from app.parser import parse_html
 from app.schemas import AnalyzeRequest, AnalyzeResponse
@@ -35,14 +38,16 @@ def analyze_page(request: AnalyzeRequest):
     except FetchError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    parse_html(html)
+    parsed = parse_html(html)
 
-    issues = []
-    fixes = []
+    parsed_url = urlparse(str(request.url))
+    location = parsed_url.path or "/"
+
+    issues = run_detectors(parsed, location)
     score = calculate_score(issues)
 
     return AnalyzeResponse(
         score=score,
         issues=issues,
-        fixes=fixes,
+        fixes=[],
     )
