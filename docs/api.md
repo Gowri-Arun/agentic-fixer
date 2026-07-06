@@ -6,7 +6,7 @@
 
 Returns service status.
 
-Example response:
+**Response:**
 
 ```json
 {
@@ -15,11 +15,15 @@ Example response:
 }
 ```
 
+---
+
 ## Analyze Page
 
 `POST /analyze`
 
-Request:
+Analyzes a live web page for agent-readiness issues.
+
+**Request body:**
 
 ```json
 {
@@ -28,21 +32,59 @@ Request:
 }
 ```
 
-Response:
+**Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | Yes | URL to analyze |
+| `target_stack` | string | Yes | Target stack for fixes |
+
+**Supported target stacks:**
+
+- `nextjs-13` — Next.js 13 App Router
+- `react-spa` — React single-page application
+- `plain-html` — Vanilla HTML
+
+**Response:**
 
 ```json
 {
-  "score": 100,
-  "issues": [],
-  "fixes": []
+  "score": 80,
+  "grade": "Good",
+  "summary": "This page has structured data gaps...",
+  "issues": [
+    {
+      "id": "missing_faq_schema",
+      "severity": "high",
+      "category": "structured_data",
+      "location": "/pricing",
+      "description": "FAQ section detected but no FAQPage JSON-LD."
+    }
+  ],
+  "fixes": [
+    {
+      "issue_id": "missing_faq_schema",
+      "title": "Add FAQ JSON-LD schema",
+      "priority": "high",
+      "why_it_matters": "Helps agents understand Q&A content.",
+      "code_snippet": "...",
+      "instructions": ["Step 1...", "Step 2..."]
+    }
+  ],
+  "metadata": {
+    "url": "https://example.com",
+    "location": "/pricing",
+    "target_stack": "nextjs-13",
+    "checked_at": "2025-01-01T00:00:00+00:00",
+    "issue_count": 1,
+    "fix_count": 1,
+    "detectors_run": ["faq", "pricing", "policy", "headings", "structured_data"]
+  },
+  "markdown_report": "# Agentic Readiness Audit Report\n..."
 }
 ```
 
-## Supported Target Stacks
-
-- `nextjs-13`
-- `react-spa`
-- `plain-html`
+---
 
 ## List Example Pages
 
@@ -50,7 +92,7 @@ Response:
 
 Returns a list of available demo example pages for deterministic analysis.
 
-Example response:
+**Response:**
 
 ```json
 [
@@ -63,13 +105,15 @@ Example response:
 ]
 ```
 
+---
+
 ## Analyze Demo Page
 
 `POST /analyze-demo`
 
-Analyzes a demo example page for agent-readiness issues.
+Analyzes a local demo page for agent-readiness issues.
 
-Request:
+**Request body:**
 
 ```json
 {
@@ -78,11 +122,29 @@ Request:
 }
 ```
 
-Response: Same shape as `/analyze` endpoint.
+**Available example IDs:**
 
-Example IDs:
+| ID | Description |
+|----|-------------|
+| `faq-no-schema` | FAQ content without schema |
+| `saas-pricing-missing-schema` | Pricing page without Product/Service schema |
+| `good-agent-ready-page` | Page with proper structured data |
+| `bad-heading-structure` | Page with heading hierarchy issues |
 
-- `faq-no-schema`
-- `saas-pricing-missing-schema`
-- `good-agent-ready-page`
-- `bad-heading-structure`
+**Response:** Same shape as `/analyze` endpoint.
+
+---
+
+## Response Shape
+
+All analysis endpoints return the same response structure:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `score` | integer | Readiness score (0–100) |
+| `grade` | string | Excellent, Good, Needs Work, or Poor |
+| `summary` | string | Human-readable summary |
+| `issues` | array | Detected issues |
+| `fixes` | array | Suggested fixes |
+| `metadata` | object | Audit metadata |
+| `markdown_report` | string | Full markdown report |
