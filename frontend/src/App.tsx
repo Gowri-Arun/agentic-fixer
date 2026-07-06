@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { analyzePage } from "./api/analyze";
 import { AnalyzeForm } from "./components/AnalyzeForm";
+import { IssueCard } from "./components/IssueCard";
+import { ScoreCard } from "./components/ScoreCard";
 import type { AnalyzeResponse, TargetStack } from "./types/audit";
 
 function App() {
@@ -16,7 +18,9 @@ function App() {
       const response = await analyzePage({ url, target_stack: targetStack });
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
       setResult(null);
     } finally {
       setIsLoading(false);
@@ -40,9 +44,37 @@ function App() {
           </div>
         )}
 
-        {result && (
-          <div className="results-placeholder">
-            <p>Results will appear here...</p>
+        {isLoading && (
+          <div className="card loading-card">
+            <p>Analyzing page and generating fixes...</p>
+          </div>
+        )}
+
+        {result && !isLoading && (
+          <div className="results">
+            <ScoreCard
+              score={result.score}
+              grade={result.grade}
+              summary={result.summary}
+              metadata={result.metadata}
+            />
+
+            {result.issues.length > 0 && (
+              <section className="issues-section">
+                <h2>Detected Issues ({result.issues.length})</h2>
+                <div className="issues-list">
+                  {result.issues.map((issue, index) => (
+                    <IssueCard key={`${issue.id}-${index}`} issue={issue} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {result.issues.length === 0 && (
+              <div className="card empty-state">
+                <p>No issues detected. This page is well-structured for agents.</p>
+              </div>
+            )}
           </div>
         )}
       </main>
