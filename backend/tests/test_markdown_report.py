@@ -31,7 +31,9 @@ def test_empty_audit_returns_no_issues_message():
 
 
 def test_report_includes_metadata_fields():
-    metadata = _metadata(url="https://test.com/page", checked_at="2025-06-01T12:00:00+00:00")
+    metadata = _metadata(
+        url="https://test.com/page", checked_at="2025-06-01T12:00:00+00:00"
+    )
     report = generate_markdown_report(
         score=85,
         grade="Good",
