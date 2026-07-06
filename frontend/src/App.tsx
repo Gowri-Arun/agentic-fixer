@@ -4,6 +4,7 @@ import { AnalyzeForm } from "./components/AnalyzeForm";
 import { EmptyState } from "./components/EmptyState";
 import { ErrorState } from "./components/ErrorState";
 import { ExampleSelector } from "./components/ExampleSelector";
+import { ExportActions } from "./components/ExportActions";
 import { FixCard } from "./components/FixCard";
 import { IssueCard } from "./components/IssueCard";
 import { LoadingState } from "./components/LoadingState";
@@ -104,6 +105,8 @@ function App() {
             )}
 
             <MarkdownReport markdown={result.markdown_report} />
+
+            <ExportActions result={result} />
           </div>
         )}
 
