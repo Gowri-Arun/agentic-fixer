@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { analyzePage } from "./api/analyze";
 import { AnalyzeForm } from "./components/AnalyzeForm";
+import { EmptyState } from "./components/EmptyState";
+import { ErrorState } from "./components/ErrorState";
 import { FixCard } from "./components/FixCard";
 import { IssueCard } from "./components/IssueCard";
+import { LoadingState } from "./components/LoadingState";
 import { MarkdownReport } from "./components/MarkdownReport";
 import { ScoreCard } from "./components/ScoreCard";
 import type { AnalyzeResponse, TargetStack } from "./types/audit";
@@ -40,17 +43,9 @@ function App() {
           <AnalyzeForm onSubmit={handleAnalyze} isLoading={isLoading} />
         </div>
 
-        {error && (
-          <div className="card error-card">
-            <p className="error-message">{error}</p>
-          </div>
-        )}
+        {error && <ErrorState message={error} />}
 
-        {isLoading && (
-          <div className="card loading-card">
-            <p>Analyzing page and generating fixes...</p>
-          </div>
-        )}
+        {isLoading && <LoadingState />}
 
         {result && !isLoading && (
           <div className="results">
@@ -84,16 +79,14 @@ function App() {
             )}
 
             {result.issues.length === 0 && result.fixes.length === 0 && (
-              <div className="card empty-state">
-                <p>
-                  No issues detected. This page is well-structured for agents.
-                </p>
-              </div>
+              <EmptyState />
             )}
 
             <MarkdownReport markdown={result.markdown_report} />
           </div>
         )}
+
+        {!result && !isLoading && !error && <EmptyState />}
       </main>
     </div>
   );
