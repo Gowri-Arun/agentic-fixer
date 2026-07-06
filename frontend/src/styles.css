@@ -280,3 +280,166 @@ button:disabled {
   color: var(--color-text-muted);
   padding: 2rem;
 }
+
+.fixes-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.fixes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fix-card {
+  padding: 1.25rem;
+}
+
+.fix-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.fix-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.priority-low {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.fix-issue-id {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.fix-why {
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.fix-instructions {
+  margin-bottom: 1rem;
+}
+
+.fix-instructions strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.fix-instructions ol {
+  margin-left: 1.5rem;
+  color: var(--color-text);
+}
+
+.fix-instructions li {
+  margin-bottom: 0.25rem;
+}
+
+.fix-code {
+  margin-top: 1rem;
+}
+
+.fix-code strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.code-block {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.code-language {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.copy-button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-button:hover {
+  background: var(--color-bg);
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: #f8fafc;
+}
+
+.code-block code {
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.markdown-report {
+  cursor: pointer;
+}
+
+.markdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.markdown-header .copy-button {
+  cursor: pointer;
+}
+
+.markdown-content {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

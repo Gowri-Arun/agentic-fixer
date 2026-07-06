@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { analyzePage } from "./api/analyze";
 import { AnalyzeForm } from "./components/AnalyzeForm";
+import { FixCard } from "./components/FixCard";
 import { IssueCard } from "./components/IssueCard";
+import { MarkdownReport } from "./components/MarkdownReport";
 import { ScoreCard } from "./components/ScoreCard";
 import type { AnalyzeResponse, TargetStack } from "./types/audit";
 
@@ -70,11 +72,26 @@ function App() {
               </section>
             )}
 
-            {result.issues.length === 0 && (
+            {result.fixes.length > 0 && (
+              <section className="fixes-section">
+                <h2>Suggested Fixes ({result.fixes.length})</h2>
+                <div className="fixes-list">
+                  {result.fixes.map((fix, index) => (
+                    <FixCard key={`${fix.issue_id}-${index}`} fix={fix} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {result.issues.length === 0 && result.fixes.length === 0 && (
               <div className="card empty-state">
-                <p>No issues detected. This page is well-structured for agents.</p>
+                <p>
+                  No issues detected. This page is well-structured for agents.
+                </p>
               </div>
             )}
+
+            <MarkdownReport markdown={result.markdown_report} />
           </div>
         )}
       </main>
