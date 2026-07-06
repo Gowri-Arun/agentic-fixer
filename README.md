@@ -1,192 +1,164 @@
 # Agentic Fixer
 
-**Agentic Fixer** is a small FastAPI-based tool that scans a live web page for **agent‑readiness issues** and returns **dev‑ready, stack‑specific fixes**.
+<!-- CI badges can be added after the GitHub repository URL is finalized. -->
 
-It does two things:
+Agentic Fixer scans web pages for agent-readiness issues and generates stack-specific developer fixes.
 
-1. Runs **stack‑agnostic checks** on a URL to find issues that make life hard for AI agents and search (missing structured data, unclear pricing, weak headings, hidden policies).
-2. Generates **pasteable code snippets** for a chosen target stack (starting with Next.js 13, React SPA, and plain HTML), plus short instructions on where to drop them.
+## Why It Exists
 
-The idea is to go beyond “here’s a report” and make it trivial for developers to move from **diagnosis** → **patch**.
+Modern web pages need to be understandable by humans, search engines, and AI agents. Agentic Fixer helps identify missing structured data, unclear trust/policy signals, and document structure issues, then gives developers concrete fixes they can paste directly into their codebase.
 
----
+## Features
 
-## Why this exists
-
-As the internet shifts from **human‑first** to **agent‑first**, content has to be understandable not just by people but by AI agents and search engines. That usually means:
-
-- surfacing key information (pricing, policies, FAQs) clearly in the HTML,
-- adding structured data (JSON‑LD) so agents can trust and reuse it,
-- keeping headings and layout predictable.
-
-Tools like Bridge AI talk about **agentic readiness** and “dev‑ready, high‑impact fixes” to bridge this gap for real sites. Agentic Fixer is a small experimental tool that focuses on a narrow slice of that problem:
-
-> Take any URL → detect agent‑readiness issues → output concrete fixes in the stack you care about.
-
----
-
-## What it does (MVP)
-
-For the first version, Agentic Fixer focuses on:
-
-### Detection (stack‑agnostic)
-
-Given a URL, it fetches the HTML and looks for:
-
-- **FAQ without FAQ schema**
-  - Page has a human‑readable FAQ section
-  - No `FAQPage` JSON‑LD schema present
-
-- **Pricing without Product/Service schema**
-  - Page looks like a pricing/product page (keywords + currency patterns)
-  - No `Product` or `Service` JSON‑LD schema
-
-- **Missing policy surface**
-  - No visible mention of refund/returns/shipping/privacy on pages where this matters
-
-- **Heading hierarchy issues**
-  - Missing or multiple `<h1>`
-  - Deep heading jumps (e.g. `h3` without a preceding `h2`)
-
-These checks don’t assume React/Next/WordPress/Shopify; they work purely on the rendered HTML.
-
-### Fix generation (stack‑specific)
-
-You choose a **target stack** you want fixes in:
-
-- `nextjs-13` – Next.js App Router (`next/script` JSON‑LD patterns)
-- `react-spa` – generic React app
-- `plain-html` – vanilla HTML template
-
-For each detected issue, Agentic Fixer returns a **Fix**:
-
-- short title
-- why it matters for agents
-- **code snippet** appropriate for the chosen stack
-- step‑by‑step instructions on where to paste it
-
-Example: FAQ without schema → you get a FAQ JSON‑LD block to paste into your Next.js page (or React component / HTML template), following patterns from structured data guides.
-
----
-
-## High‑level flow
-
-1. **Request**
-
-   Send a POST request to `/analyze` with:
-
-   ```json
-   {
-     "url": "https://example.com/pricing",
-     "target_stack": "nextjs-13"
-   }
-   ```
-
-2. **Processing**
-
-   Agentic Fixer:
-
-   - Downloads and parses the HTML
-   - Runs the detection rules
-   - Builds an **Agentic Readiness Score** (0–100) based on issues
-   - Generates stack‑specific fixes
-
-3. **Response**
-
-   Example (simplified):
-
-   ```json
-   {
-     "score": 60,
-     "issues": [
-       {
-         "id": "missing_faq_schema",
-         "severity": "high",
-         "location": "/pricing",
-         "description": "FAQ section detected but no FAQPage JSON-LD structured data."
-       }
-     ],
-     "fixes": [
-       {
-         "issue_id": "missing_faq_schema",
-         "title": "Add FAQ JSON-LD schema to your pricing page",
-         "why_it_matters": "AI agents and search engines rely on structured FAQs to answer user questions reliably.",
-         "code_snippet": "// Next.js 13 Script snippet with FAQ JSON-LD",
-         "instructions": [
-           "Open app/pricing/page.tsx (or the page with your FAQ).",
-           "Import Script from 'next/script'.",
-           "Paste this Script block at the top of your component."
-         ]
-       }
-     ]
-   }
-   ```
-
----
-
-## Tech stack
-
-- **Backend:** FastAPI
-- **Parsing:** `requests`, `beautifulsoup4`
-- **Response:** JSON (meant to power a small web UI or be called directly via CLI/Postman)
-- **Frontend (optional but recommended):**
-  - A simple page with:
-    - URL input
-    - target stack dropdown
-    - “Analyze” button
-    - Score + issues + code snippets rendered nicely with copy buttons
-
----
-
-## Data model (conceptual)
-
-### Issue
-
-```json
-{
-  "id": "missing_faq_schema",
-  "severity": "high",
-  "location": "/pricing",
-  "description": "FAQ section detected but no FAQPage JSON-LD structured data."
-}
-```
-
-### Fix
-
-```json
-{
-  "issue_id": "missing_faq_schema",
-  "title": "Add FAQ JSON-LD schema to your pricing page",
-  "why_it_matters": "AI agents and search engines rely on structured FAQs to answer user questions reliably.",
-  "code_snippet": "// stack-specific snippet",
-  "instructions": [
-    "Step 1 ...",
-    "Step 2 ..."
-  ]
-}
-```
-
-### Response
-
-```json
-{
-  "score": 0,
-  "issues": [],
-  "fixes": []
-}
-```
-
----
-
-## Current limitations
-
-- Detection is intentionally simple:
-  - Heuristics based on headings, text patterns, and JSON‑LD scripts
-- Fix generation currently supports only:
-  - Next.js 13
+- Live URL analysis
+- Deterministic demo analysis
+- Agent-readiness scoring (0–100)
+- Readiness grade and summary
+- Stack-agnostic detection engine
+- Stack-specific fix generation
+- Supported stacks:
+  - Next.js 13 App Router
   - React SPA
   - Plain HTML
-- Generated snippets are **patch ideas**, not auto‑applied diffs:
-  - You should review and adapt them to your project conventions
+- Markdown report output
+- JSON and Markdown export
+- Copyable code snippets
+- Backend and frontend CI
 
----
+## Supported Checks
+
+- FAQ content without FAQPage schema
+- Pricing or commercial offering content without Product/Service schema
+- Commercial pages missing visible policy or trust information
+- Missing or multiple H1 headings
+- Heading hierarchy jumps
+- Invalid JSON-LD blocks
+
+## Tech Stack
+
+- **Backend:** FastAPI, Pydantic, BeautifulSoup, requests
+- **Frontend:** React, TypeScript, Vite
+- **Tooling:** pytest, Ruff, GitHub Actions
+
+## Project Structure
+
+```
+backend/          FastAPI backend with detection engine and fix generation
+frontend/         React frontend with TypeScript
+docs/             Project documentation
+.github/          CI workflows
+```
+
+## Local Setup
+
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+macOS/Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Environment Variables
+
+Backend configuration is in:
+
+```txt
+backend/.env.example
+```
+
+Frontend configuration is in:
+
+```txt
+frontend/.env.example
+```
+
+The frontend uses:
+
+```txt
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+## API Overview
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Health check |
+| `/analyze` | POST | Live URL analysis |
+| `/examples` | GET | List demo examples |
+| `/analyze-demo` | POST | Analyze demo page |
+
+Full API documentation: [docs/api.md](docs/api.md)
+
+## Demo Flow
+
+1. Start the backend server
+2. Start the frontend dev server
+3. Open the frontend in your browser
+4. Try deterministic examples to see issues and fixes
+5. Analyze a live URL if network permits
+6. Copy generated fixes or export the report
+
+Demo guide: [docs/demo.md](docs/demo.md)
+
+## Testing and Quality
+
+### Backend
+
+```bash
+ruff check backend
+ruff format --check backend
+pytest
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run build
+```
+
+### All Checks
+
+```bash
+make check
+```
+
+## Current Limitations
+
+- Detection is heuristic and rule-based
+- Raw `requests` fetching may not fully capture JavaScript-rendered pages
+- Generated snippets use placeholders and should be reviewed before production use
+- No automatic code patching yet
+
+## Roadmap
+
+- JavaScript-rendered page support
+- Richer schema extraction
+- GitHub PR patch generation
+- Browser extension
+- Hosted demo
+
+## Screenshots
+
+Screenshots can be added under `docs/assets/` after the local demo is captured.
+
+## License
+
+License not specified yet.
