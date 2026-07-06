@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, HttpUrl
 
-
 TargetStack = Literal["nextjs-13", "react-spa", "plain-html"]
 Severity = Literal["low", "medium", "high"]
 
