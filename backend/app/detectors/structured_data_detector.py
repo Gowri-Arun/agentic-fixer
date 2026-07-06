@@ -7,6 +7,7 @@ def detect_invalid_json_ld(parsed: dict, location: str) -> list[Issue]:
             Issue(
                 id="invalid_json_ld",
                 severity="medium",
+                category="structured_data",
                 location=location,
                 description=(
                     "One or more JSON-LD structured data blocks could"

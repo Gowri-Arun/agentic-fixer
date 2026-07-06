@@ -6,6 +6,7 @@ def _issue(issue_id: str) -> Issue:
     return Issue(
         id=issue_id,
         severity="medium",
+        category="other",
         location="/test",
         description="Test issue",
     )

@@ -2,6 +2,12 @@ from app.schemas import Fix, Issue
 
 STACK_GENERATORS: dict[str, object] = {}
 
+SEVERITY_TO_PRIORITY = {
+    "high": "high",
+    "medium": "medium",
+    "low": "low",
+}
+
 
 def _load_generators() -> None:
     if STACK_GENERATORS:
@@ -24,5 +30,7 @@ def generate_fixes(issues: list[Issue], target_stack: str) -> list[Fix]:
     for issue in issues:
         fix = generator(issue.id)  # type: ignore[operator]
         if fix is not None:
+            # Set priority based on issue severity
+            fix.priority = SEVERITY_TO_PRIORITY.get(issue.severity, "medium")
             fixes.append(fix)
     return fixes
