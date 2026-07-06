@@ -43,3 +43,15 @@ export interface AnalyzeResponse {
   metadata: AuditMetadata;
   markdown_report: string;
 }
+
+export interface ExamplePage {
+  id: string;
+  title: string;
+  description: string;
+  expected_issues: string[];
+}
+
+export interface DemoAnalyzeRequest {
+  example_id: string;
+  target_stack: TargetStack;
+}

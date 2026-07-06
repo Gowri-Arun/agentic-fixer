@@ -3,6 +3,7 @@ import { analyzePage } from "./api/analyze";
 import { AnalyzeForm } from "./components/AnalyzeForm";
 import { EmptyState } from "./components/EmptyState";
 import { ErrorState } from "./components/ErrorState";
+import { ExampleSelector } from "./components/ExampleSelector";
 import { FixCard } from "./components/FixCard";
 import { IssueCard } from "./components/IssueCard";
 import { LoadingState } from "./components/LoadingState";
@@ -14,13 +15,15 @@ function App() {
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [targetStack, setTargetStack] = useState<TargetStack>("nextjs-13");
 
-  const handleAnalyze = async (url: string, targetStack: TargetStack) => {
+  const handleAnalyze = async (url: string, stack: TargetStack) => {
     setError(null);
     setIsLoading(true);
+    setTargetStack(stack);
 
     try {
-      const response = await analyzePage({ url, target_stack: targetStack });
+      const response = await analyzePage({ url, target_stack: stack });
       setResult(response);
     } catch (err) {
       setError(
@@ -30,6 +33,16 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoResult = (response: AnalyzeResponse) => {
+    setResult(response);
+    setError(null);
+  };
+
+  const handleDemoError = (errorMessage: string) => {
+    setError(errorMessage);
+    setResult(null);
   };
 
   return (
@@ -42,6 +55,14 @@ function App() {
         <div className="card">
           <AnalyzeForm onSubmit={handleAnalyze} isLoading={isLoading} />
         </div>
+
+        <ExampleSelector
+          targetStack={targetStack}
+          onResult={handleDemoResult}
+          onError={handleDemoError}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+        />
 
         {error && <ErrorState message={error} />}
 
