@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.demo_pages import list_example_pages
+from app.evaluation.api import router as evaluation_router
 from app.schemas import (
     AnalyzeRequest,
     AnalyzeResponse,
@@ -22,6 +23,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(evaluation_router)
 
 
 @app.get("/")
