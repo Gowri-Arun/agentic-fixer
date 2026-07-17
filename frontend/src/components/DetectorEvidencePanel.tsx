@@ -12,12 +12,50 @@ const DECISION_LABELS: Record<string, string> = {
   error: "Error",
 };
 
-function formatValue(field: EvidenceField): string {
+const ARRAY_TRUNCATE_LIMIT = 5;
+
+function EscapedText({ text }: { text: string }) {
+  return <>{text}</>;
+}
+
+function ArrayValue({ items }: { items: string[] }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (items.length <= ARRAY_TRUNCATE_LIMIT) {
+    return <EscapedText text={items.join(", ")} />;
+  }
+
+  const visibleItems = isExpanded ? items : items.slice(0, ARRAY_TRUNCATE_LIMIT);
+  const remainingCount = items.length - ARRAY_TRUNCATE_LIMIT;
+
+  return (
+    <span className="evidence-array">
+      <EscapedText text={visibleItems.join(", ")} />
+      {!isExpanded && (
+        <button
+          className="evidence-expand"
+          onClick={() => setIsExpanded(true)}
+          aria-label={`Show ${remainingCount} more items`}
+        >
+          and {remainingCount} more...
+        </button>
+      )}
+      {isExpanded && items.length > ARRAY_TRUNCATE_LIMIT && (
+        <button
+          className="evidence-collapse"
+          onClick={() => setIsExpanded(false)}
+          aria-label="Show fewer items"
+        >
+          Show less
+        </button>
+      )}
+    </span>
+  );
+}
+
+function formatValue(field: EvidenceField): React.ReactNode {
   if (Array.isArray(field.value)) {
-    if (field.value.length > 5) {
-      return `${field.value.slice(0, 5).join(", ")} and ${field.value.length - 5} more`;
-    }
-    return field.value.join(", ");
+    return <ArrayValue items={field.value} />;
   }
   if (typeof field.value === "boolean") {
     return field.value ? "Yes" : "No";
@@ -35,7 +73,9 @@ export function DetectorEvidencePanel({ detector }: DetectorEvidencePanelProps) 
     return null;
   }
 
-  const hasEvidence = detector.evidence.fields.length > 0;
+  const filteredFields = detector.evidence.fields.filter(
+    (field) => field.value !== null && field.value !== undefined && field.value !== "",
+  );
 
   return (
     <div className="evidence-panel">
@@ -63,19 +103,22 @@ export function DetectorEvidencePanel({ detector }: DetectorEvidencePanelProps) 
             <span>
               Decision: {DECISION_LABELS[detector.decision] ?? detector.decision}
             </span>
-            <span>Confidence: {detector.confidence} (heuristic)</span>
+            <span>Confidence: {detector.confidence} (heuristic strength)</span>
             <span>Duration: {(detector.duration_ms / 1000).toFixed(1)}ms</span>
+            {detector.issues.length > 0 && (
+              <span>Issues found: {detector.issues.length}</span>
+            )}
           </div>
 
           {detector.decision === "skipped" && detector.skipped_reason && (
             <div className="evidence-skipped">
-              Skipped: {detector.skipped_reason}
+              <strong>Skipped:</strong> {detector.skipped_reason}
             </div>
           )}
 
-          {hasEvidence && (
+          {filteredFields.length > 0 && (
             <div className="evidence-fields">
-              {detector.evidence.fields.map((field, index) => (
+              {filteredFields.map((field, index) => (
                 <div key={index} className="evidence-field">
                   <span className="evidence-field-name">{field.name}</span>
                   <span className="evidence-field-value">
@@ -86,7 +129,7 @@ export function DetectorEvidencePanel({ detector }: DetectorEvidencePanelProps) 
             </div>
           )}
 
-          {!hasEvidence && detector.decision !== "skipped" && (
+          {filteredFields.length === 0 && detector.decision !== "skipped" && (
             <p className="evidence-empty">No evidence available</p>
           )}
         </div>
