@@ -17,7 +17,7 @@ def test_analyze_returns_response_shape(monkeypatch):
     def mock_fetch_html(url: str) -> str:
         return "<html><body><h1>Example</h1></body></html>"
 
-    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+    monkeypatch.setattr("app.services.analysis.fetch_html", mock_fetch_html)
 
     response = client.post(
         "/analyze",
@@ -63,7 +63,7 @@ def test_fetch_failure_returns_400(monkeypatch):
     def mock_fetch_html(url: str) -> str:
         raise FetchError("Failed to fetch URL")
 
-    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+    monkeypatch.setattr("app.services.analysis.fetch_html", mock_fetch_html)
 
     response = client.post(
         "/analyze",
@@ -88,7 +88,7 @@ def test_analyze_detects_faq_issue(monkeypatch):
         </html>
         """
 
-    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+    monkeypatch.setattr("app.services.analysis.fetch_html", mock_fetch_html)
 
     response = client.post(
         "/analyze",
@@ -122,7 +122,7 @@ def test_analyze_fixes_differ_by_target_stack(monkeypatch):
         </html>
         """
 
-    monkeypatch.setattr("app.main.fetch_html", mock_fetch_html)
+    monkeypatch.setattr("app.services.analysis.fetch_html", mock_fetch_html)
 
     response_nextjs = client.post(
         "/analyze",
