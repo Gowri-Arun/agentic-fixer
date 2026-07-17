@@ -37,6 +37,7 @@ class AuditMetadata(BaseModel):
     issue_count: int
     fix_count: int
     detectors_run: list[str]
+    detector_results: list[dict] | None = None
 
 
 class AnalyzeResponse(BaseModel):

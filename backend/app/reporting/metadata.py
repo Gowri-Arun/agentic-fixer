@@ -17,6 +17,7 @@ def build_audit_metadata(
     target_stack: TargetStack,
     issue_count: int,
     fix_count: int,
+    detector_results: list[dict] | None = None,
 ) -> AuditMetadata:
     """
     Build audit metadata for the response.
@@ -27,6 +28,7 @@ def build_audit_metadata(
         target_stack: The target stack for fixes
         issue_count: Number of issues found
         fix_count: Number of fixes generated
+        detector_results: Optional list of detector result dicts
 
     Returns:
         AuditMetadata object with all required fields
@@ -41,4 +43,5 @@ def build_audit_metadata(
         issue_count=issue_count,
         fix_count=fix_count,
         detectors_run=DETECTORS_RUN,
+        detector_results=detector_results,
     )

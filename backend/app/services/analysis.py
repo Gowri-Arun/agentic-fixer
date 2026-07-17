@@ -1,7 +1,9 @@
+"""Analysis service — thin orchestration over parsers, detectors, and reporters."""
+
 from urllib.parse import urlparse
 
 from app.demo_pages import load_example_html
-from app.detectors.runner import run_detectors
+from app.detectors.runner import run_detectors_explainable
 from app.fetcher import FetchError, fetch_html
 from app.fixes.registry import generate_fixes
 from app.parser import parse_html
@@ -9,7 +11,7 @@ from app.reporting.grades import get_readiness_grade
 from app.reporting.markdown import generate_markdown_report
 from app.reporting.metadata import build_audit_metadata
 from app.reporting.summaries import generate_summary
-from app.schemas import AnalyzeResponse, TargetStack
+from app.schemas import AnalyzeResponse, Issue, TargetStack
 from app.scoring import calculate_score
 
 
@@ -25,17 +27,28 @@ def analyze_html(
 ) -> AnalyzeResponse:
     """Analyze HTML content and return a full audit response."""
     parsed = parse_html(html)
-    issues = run_detectors(parsed, location)
+    run = run_detectors_explainable(parsed, location)
+
+    # Flatten issues from all detector results (dicts → Issue objects)
+    issues: list[Issue] = []
+    for result in run.results:
+        issues.extend(Issue.model_validate(i) for i in result.issues)
+
     score = calculate_score(issues)
     fixes = generate_fixes(issues, target_stack)
     grade = get_readiness_grade(score)
     summary = generate_summary(score, issues)
+
+    # Build detector results list for metadata
+    detector_results = [r.model_dump() for r in run.results]
+
     metadata = build_audit_metadata(
         url=url,
         location=location,
         target_stack=target_stack,
         issue_count=len(issues),
         fix_count=len(fixes),
+        detector_results=detector_results,
     )
     markdown_report = generate_markdown_report(
         score=score,
