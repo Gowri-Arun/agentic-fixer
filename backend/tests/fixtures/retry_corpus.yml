@@ -1,0 +1,6 @@
+sites:
+  - name: Retry Site
+    url: "https://retry.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"

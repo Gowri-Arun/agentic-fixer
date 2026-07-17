@@ -39,7 +39,11 @@ export function FixCard({ fix }: FixCardProps) {
       {fix.code_snippet && (
         <div className="fix-code">
           <strong>Code snippet:</strong>
-          <CodeBlock code={fix.code_snippet} />
+          <CodeBlock
+            code={fix.code_snippet}
+            language={fix.language ?? "html"}
+            filePath={fix.file_path}
+          />
         </div>
       )}
     </div>

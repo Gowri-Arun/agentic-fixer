@@ -1,0 +1,6 @@
+sites:
+  - name: Multi Retry
+    url: "https://multiretry.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"

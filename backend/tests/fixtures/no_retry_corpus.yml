@@ -1,0 +1,6 @@
+sites:
+  - name: DNS Fail
+    url: "https://dns.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"

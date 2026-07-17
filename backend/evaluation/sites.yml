@@ -1,0 +1,255 @@
+sites:
+  # SaaS Pricing Pages (5)
+  - name: "GitHub Pricing"
+    url: "https://github.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Visible pricing tiers"
+      - description: "Feature comparison table"
+    tags: [saas, pricing, developer]
+    enabled: true
+    notes: "Major SaaS pricing page"
+
+  - name: "Stripe Pricing"
+    url: "https://stripe.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Transaction-based pricing"
+      - description: "Fee structure details"
+    tags: [saas, pricing, payments]
+    enabled: true
+    notes: "Payment processor pricing"
+
+  - name: "Notion Pricing"
+    url: "https://www.notion.so/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Tier-based pricing"
+      - description: "Feature limits per plan"
+    tags: [saas, pricing, productivity]
+    enabled: true
+    notes: "Productivity tool pricing"
+
+  - name: "Figma Pricing"
+    url: "https://www.figma.com/pricing/"
+    page_type: pricing
+    expected_signals:
+      - description: "Per-editor pricing"
+      - description: "Plan comparison"
+    tags: [saas, pricing, design]
+    enabled: true
+    notes: "Design tool pricing"
+
+  - name: "Vercel Pricing"
+    url: "https://vercel.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Usage-based pricing"
+      - description: "Tier comparison"
+    tags: [saas, pricing, hosting]
+    enabled: true
+    notes: "Hosting platform pricing"
+
+  # FAQ / Help Centre Pages (5)
+  - name: "Stripe Support FAQ"
+    url: "https://support.stripe.com/topics/faq"
+    page_type: faq
+    expected_signals:
+      - description: "Question-answer format"
+      - description: "Payment-related questions"
+    tags: [faq, support, payments]
+    enabled: true
+    notes: "Payment processor FAQ"
+
+  - name: "GitHub Docs FAQ"
+    url: "https://docs.github.com/en/get-started/faq"
+    page_type: faq
+    expected_signals:
+      - description: "Frequently asked questions"
+      - description: "Account and billing info"
+    tags: [faq, docs, developer]
+    enabled: true
+    notes: "Developer platform FAQ"
+
+  - name: "Shopify Help Center"
+    url: "https://help.shopify.com/"
+    page_type: faq
+    expected_signals:
+      - description: "Help articles"
+      - description: "Search functionality"
+    tags: [faq, help, ecommerce]
+    enabled: true
+    notes: "Ecommerce platform help"
+
+  - name: "Cloudflare Learning Center"
+    url: "https://www.cloudflare.com/learning/"
+    page_type: faq
+    expected_signals:
+      - description: "Educational content"
+      - description: "Technical explanations"
+    tags: [faq, learning, security]
+    enabled: true
+    notes: "Security and networking education"
+
+  - name: "Atlassian Support"
+    url: "https://support.atlassian.com/"
+    page_type: faq
+    expected_signals:
+      - description: "Knowledge base"
+      - description: "Product documentation"
+    tags: [faq, support, productivity]
+    enabled: true
+    notes: "Project management support"
+
+  # Ecommerce / Product Pages (5)
+  - name: "Apple Store - iPhone"
+    url: "https://www.apple.com/shop/buy-iphone"
+    page_type: ecommerce
+    expected_signals:
+      - description: "Product listing"
+      - description: "Pricing information"
+    tags: [ecommerce, tech, mobile]
+    enabled: true
+    notes: "Major tech retailer"
+
+  - name: "Amazon Best Sellers"
+    url: "https://www.amazon.com/Best-Sellers/zgbs"
+    page_type: ecommerce
+    expected_signals:
+      - description: "Product rankings"
+      - description: "Price display"
+    tags: [ecommerce, marketplace]
+    enabled: false
+    notes: "Disabled - heavy anti-bot measures"
+
+  - name: "Etsy - Handmade Items"
+    url: "https://www.etsy.com/market/handmade"
+    page_type: ecommerce
+    expected_signals:
+      - description: "Artisan products"
+      - description: "Price ranges"
+    tags: [ecommerce, handmade, marketplace]
+    enabled: true
+    notes: "Artisan marketplace"
+
+  - name: "Best Buy Electronics"
+    url: "https://www.bestbuy.com/site/computers-pcs/laptop-computers/abcat0502000.c"
+    page_type: ecommerce
+    expected_signals:
+      - description: "Product category"
+      - description: "Price comparison"
+    tags: [ecommerce, electronics, retail]
+    enabled: true
+    notes: "Electronics retailer"
+
+  - name: "Zappos Shoes"
+    url: "https://www.zappos.com/men-shoes/CK_XARCz1wHAAQLiAgMBAhg.zso"
+    page_type: ecommerce
+    expected_signals:
+      - description: "Product catalog"
+      - description: "Price filtering"
+    tags: [ecommerce, fashion, retail]
+    enabled: true
+    notes: "Footwear retailer"
+
+  # Small Business / Service / Informational Pages (5)
+  - name: "Basecamp - Project Management"
+    url: "https://basecamp.com/"
+    page_type: service
+    expected_signals:
+      - description: "Product overview"
+      - description: "Call to action"
+    tags: [service, productivity, saas]
+    enabled: true
+    notes: "Project management service"
+
+  - name: "Mailchimp - Email Marketing"
+    url: "https://mailchimp.com/"
+    page_type: service
+    expected_signals:
+      - description: "Service description"
+      - description: "Pricing mention"
+    tags: [service, marketing, email]
+    enabled: true
+    notes: "Email marketing platform"
+
+  - name: "Wikipedia - Artificial Intelligence"
+    url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
+    page_type: general
+    expected_signals:
+      - description: "Encyclopedia article"
+      - description: "Structured content"
+    tags: [informational, education]
+    enabled: true
+    notes: "Reference material"
+
+  - name: "MDN Web Docs - JavaScript"
+    url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+    page_type: general
+    expected_signals:
+      - description: "Technical documentation"
+      - description: "Code examples"
+    tags: [documentation, developer]
+    enabled: true
+    notes: "Web development reference"
+
+  - name: "Y Combinator - startups"
+    url: "https://www.ycombinator.com/"
+    page_type: service
+    expected_signals:
+      - description: "Startup directory"
+      - description: "Application form"
+    tags: [service, startups, funding]
+    enabled: true
+    notes: "Startup accelerator"
+
+  # Additional diversity (5 more)
+  - name: "Slack - Team Communication"
+    url: "https://slack.com/"
+    page_type: service
+    expected_signals:
+      - description: "Team messaging"
+      - description: "Feature overview"
+    tags: [service, communication, saas]
+    enabled: true
+    notes: "Communication platform"
+
+  - name: "Zoom - Video Conferencing"
+    url: "https://zoom.us/"
+    page_type: service
+    expected_signals:
+      - description: "Video meetings"
+      - description: "Plan options"
+    tags: [service, communication, video]
+    enabled: true
+    notes: "Video conferencing service"
+
+  - name: "Dropbox - Cloud Storage"
+    url: "https://www.dropbox.com/"
+    page_type: service
+    expected_signals:
+      - description: "File storage"
+      - description: "Sync features"
+    tags: [service, storage, cloud]
+    enabled: true
+    notes: "Cloud storage service"
+
+  - name: "Canva - Design Platform"
+    url: "https://www.canva.com/"
+    page_type: service
+    expected_signals:
+      - description: "Design templates"
+      - description: "Editor features"
+    tags: [service, design, creative]
+    enabled: true
+    notes: "Online design tool"
+
+  - name: "Trello - Task Management"
+    url: "https://trello.com/"
+    page_type: service
+    expected_signals:
+      - description: "Kanban boards"
+      - description: "Project organization"
+    tags: [service, productivity, tasks]
+    enabled: true
+    notes: "Visual task management"

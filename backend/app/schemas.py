@@ -27,6 +27,8 @@ class Fix(BaseModel):
     why_it_matters: str
     code_snippet: str
     instructions: list[str]
+    file_path: str | None = None
+    language: str | None = None
 
 
 class AuditMetadata(BaseModel):
@@ -37,6 +39,7 @@ class AuditMetadata(BaseModel):
     issue_count: int
     fix_count: int
     detectors_run: list[str]
+    detector_results: list[dict] | None = None
 
 
 class AnalyzeResponse(BaseModel):
