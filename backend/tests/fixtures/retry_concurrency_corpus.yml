@@ -1,0 +1,36 @@
+sites:
+  - name: Site 0
+    url: "https://site0.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+
+  - name: Site 1
+    url: "https://site1.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+
+  - name: Site 2
+    url: "https://site2.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+
+  - name: Site 3
+    url: "https://site3.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+
+  - name: Site 4
+    url: "https://site4.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+
+  - name: Site 5
+    url: "https://site5.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"

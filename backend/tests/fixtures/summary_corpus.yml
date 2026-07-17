@@ -1,0 +1,11 @@
+sites:
+  - name: High Score
+    url: "https://high.example.com"
+    page_type: pricing
+    expected_signals:
+      - description: "test"
+  - name: Low Score
+    url: "https://low.example.com"
+    page_type: faq
+    expected_signals:
+      - description: "test"

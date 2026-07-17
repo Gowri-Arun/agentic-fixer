@@ -1,0 +1,11 @@
+sites:
+  - name: Good Site
+    url: "https://good.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+  - name: Bad Site
+    url: "https://fail.example.com"
+    page_type: faq
+    expected_signals:
+      - description: "test"

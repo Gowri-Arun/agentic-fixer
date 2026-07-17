@@ -1,0 +1,13 @@
+sites:
+  - name: Enabled Site
+    url: "https://enabled.example.com"
+    page_type: general
+    enabled: true
+    expected_signals:
+      - description: "test"
+  - name: Disabled Site
+    url: "https://disabled.example.com"
+    page_type: general
+    enabled: false
+    expected_signals:
+      - description: "test"

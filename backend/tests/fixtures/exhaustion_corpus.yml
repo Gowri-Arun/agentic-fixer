@@ -1,0 +1,6 @@
+sites:
+  - name: Timeout Site
+    url: "https://timeout.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"

@@ -601,6 +601,58 @@ button:disabled {
   border-color: var(--color-primary);
 }
 
+.score-breakdown {
+  text-align: left;
+}
+
+.score-bar-group {
+  margin-bottom: 1rem;
+}
+
+.score-bar-group:last-child {
+  margin-bottom: 0;
+}
+
+.score-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.score-bar-name {
+  font-weight: 500;
+}
+
+.score-bar-value {
+  color: var(--color-text-muted);
+}
+
+.score-bar-track {
+  height: 8px;
+  background: var(--color-bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.score-bar-fill.score-high {
+  background: var(--color-success);
+}
+
+.score-bar-fill.score-medium {
+  background: var(--color-warning);
+}
+
+.score-bar-fill.score-low {
+  background: var(--color-error);
+}
+
 @media (max-width: 640px) {
   .header {
     padding: 1rem;

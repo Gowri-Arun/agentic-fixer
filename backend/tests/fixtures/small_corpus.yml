@@ -1,0 +1,11 @@
+sites:
+  - name: Site A
+    url: "https://a.example.com"
+    page_type: general
+    expected_signals:
+      - description: "test"
+  - name: Site B
+    url: "https://b.example.com"
+    page_type: faq
+    expected_signals:
+      - description: "test"

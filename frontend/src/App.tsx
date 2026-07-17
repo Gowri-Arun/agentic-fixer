@@ -9,7 +9,9 @@ import { FixCard } from "./components/FixCard";
 import { IssueCard } from "./components/IssueCard";
 import { LoadingState } from "./components/LoadingState";
 import { MarkdownReport } from "./components/MarkdownReport";
+import { ScoreBreakdown } from "./components/ScoreBreakdown";
 import { ScoreCard } from "./components/ScoreCard";
+import { computeCategoryScores } from "./utils/categoryScores";
 import type { AnalyzeResponse, TargetStack } from "./types/audit";
 
 function App() {
@@ -76,6 +78,12 @@ function App() {
               grade={result.grade}
               summary={result.summary}
               metadata={result.metadata}
+            />
+
+            <ScoreBreakdown
+              overallScore={result.score}
+              overallGrade={result.grade}
+              categoryScores={computeCategoryScores(result.issues)}
             />
 
             {result.issues.length > 0 && (
