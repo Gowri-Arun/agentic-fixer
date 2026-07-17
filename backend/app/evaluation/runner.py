@@ -1,4 +1,5 @@
 import asyncio
+import random
 import time
 from pathlib import Path
 from typing import Awaitable, Callable
@@ -18,6 +19,37 @@ from app.schemas import AnalyzeResponse
 
 # Type for an async analysis function
 AnalysisFunc = Callable[[str, str], Awaitable[AnalyzeResponse]]
+
+# Type for sleep function (injectable for testing)
+SleepFunc = Callable[[float], Awaitable[None]]
+
+
+class RetryPolicy:
+    """Configurable retry policy with exponential backoff."""
+
+    def __init__(
+        self,
+        max_attempts: int = 3,
+        base_delay: float = 1.0,
+        max_delay: float = 30.0,
+        jitter: bool = True,
+        sleep_func: SleepFunc | None = None,
+    ):
+        self.max_attempts = max_attempts
+        self.base_delay = base_delay
+        self.max_delay = max_delay
+        self.jitter = jitter
+        self._sleep = sleep_func or self._default_sleep
+
+    async def _default_sleep(self, delay: float) -> None:
+        await asyncio.sleep(delay)
+
+    def get_delay(self, attempt: int) -> float:
+        """Calculate delay with exponential backoff and optional jitter."""
+        delay = min(self.base_delay * (2 ** (attempt - 1)), self.max_delay)
+        if self.jitter:
+            delay *= 0.5 + random.random() * 0.5
+        return delay
 
 
 def _classify_error(error: Exception) -> ErrorCategory:
@@ -55,14 +87,15 @@ async def _analyze_site(
     site: SiteConfig,
     analysis_func: AnalysisFunc,
     target_stack: str,
-    max_attempts: int = 1,
+    retry_policy: RetryPolicy | None = None,
 ) -> SiteResult:
     """Analyze a single site with optional retries."""
+    policy = retry_policy or RetryPolicy(max_attempts=1)
     url = str(site.url)
     start_time = time.monotonic()
     last_error: Exception | None = None
 
-    for attempt in range(1, max_attempts + 1):
+    for attempt in range(1, policy.max_attempts + 1):
         try:
             response = await analysis_func(url, target_stack)
             duration_ms = (time.monotonic() - start_time) * 1000
@@ -81,7 +114,7 @@ async def _analyze_site(
             last_error = exc
             error_category = _classify_error(exc)
 
-            if not _should_retry(error_category) or attempt >= max_attempts:
+            if not _should_retry(error_category) or attempt >= policy.max_attempts:
                 duration_ms = (time.monotonic() - start_time) * 1000
                 return SiteFailure(
                     url=url,
@@ -94,8 +127,8 @@ async def _analyze_site(
                 )
 
             # Exponential backoff with jitter
-            delay = min(2**attempt, 10)  # Max 10 seconds
-            await asyncio.sleep(delay * 0.5)  # Halve for testing
+            delay = policy.get_delay(attempt)
+            await policy._sleep(delay)
 
     # Should not reach here, but handle gracefully
     duration_ms = (time.monotonic() - start_time) * 1000
@@ -106,7 +139,7 @@ async def _analyze_site(
         error_category=_classify_error(last_error or Exception("unknown")),
         error_message=str(last_error)[:500] if last_error else "Unknown error",
         duration_ms=duration_ms,
-        attempt_count=max_attempts,
+        attempt_count=policy.max_attempts,
     )
 
 
@@ -115,13 +148,14 @@ async def run_evaluation(
     analysis_func: AnalysisFunc,
     target_stack: str = "nextjs-13",
     concurrency: int = 4,
-    max_attempts: int = 1,
+    retry_policy: RetryPolicy | None = None,
     enabled_only: bool = True,
 ) -> EvaluationRun:
     """Run batch evaluation over a corpus of sites."""
     from datetime import datetime, timezone
     from uuid import uuid4
 
+    policy = retry_policy or RetryPolicy(max_attempts=1)
     config = load_config(corpus_path)
     sites = [s for s in config.sites if s.enabled] if enabled_only else config.sites
 
@@ -137,7 +171,7 @@ async def run_evaluation(
 
     async def _bounded_analyze(site: SiteConfig) -> SiteResult:
         async with semaphore:
-            return await _analyze_site(site, analysis_func, target_stack, max_attempts)
+            return await _analyze_site(site, analysis_func, target_stack, policy)
 
     tasks = [_bounded_analyze(site) for site in sites]
     results = await asyncio.gather(*tasks, return_exceptions=False)

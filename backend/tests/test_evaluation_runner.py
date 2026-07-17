@@ -3,7 +3,12 @@ from pathlib import Path
 
 import pytest
 from app.evaluation.models import ErrorCategory, SiteFailure, SiteSuccess
-from app.evaluation.runner import _classify_error, _should_retry, run_evaluation
+from app.evaluation.runner import (
+    RetryPolicy,
+    _classify_error,
+    _should_retry,
+    run_evaluation,
+)
 from app.schemas import AnalyzeResponse, AuditMetadata, Issue
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -340,3 +345,222 @@ async def test_run_evaluation_summary_calculation():
     assert run.summary.average_score == 75.0
     assert run.summary.scores_by_page_type["pricing"] == 90.0
     assert run.summary.scores_by_page_type["faq"] == 60.0
+
+
+def test_retry_policy_default_values():
+    policy = RetryPolicy()
+    assert policy.max_attempts == 3
+    assert policy.base_delay == 1.0
+    assert policy.max_delay == 30.0
+    assert policy.jitter is True
+
+
+def test_retry_policy_get_delay_exponential():
+    policy = RetryPolicy(base_delay=1.0, max_delay=30.0, jitter=False)
+    assert policy.get_delay(1) == 1.0
+    assert policy.get_delay(2) == 2.0
+    assert policy.get_delay(3) == 4.0
+    assert policy.get_delay(4) == 8.0
+    assert policy.get_delay(5) == 16.0
+    assert policy.get_delay(6) == 30.0  # Capped at max_delay
+
+
+def test_retry_policy_get_delay_with_jitter():
+    policy = RetryPolicy(base_delay=1.0, max_delay=30.0, jitter=True)
+    delay = policy.get_delay(1)
+    assert 0.5 <= delay <= 1.0
+
+
+@pytest.mark.asyncio
+async def test_retry_success_on_retry():
+    call_count = 0
+
+    async def mock_analysis(url: str, target_stack: str) -> AnalyzeResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise Exception("Connection refused")
+        return _make_response(score=100)
+
+    sleep_calls = []
+
+    async def mock_sleep(delay: float) -> None:
+        sleep_calls.append(delay)
+
+    config_path = FIXTURES / "retry_corpus.yml"
+    if not config_path.exists():
+        config_path.write_text(
+            "sites:\n"
+            "  - name: Retry Site\n"
+            '    url: "https://retry.example.com"\n'
+            "    page_type: general\n"
+            "    expected_signals:\n"
+            '      - description: "test"\n'
+        )
+
+    policy = RetryPolicy(max_attempts=3, sleep_func=mock_sleep)
+    run = await run_evaluation(
+        corpus_path=config_path,
+        analysis_func=mock_analysis,
+        retry_policy=policy,
+    )
+
+    assert run.summary.successful_sites == 1
+    assert run.summary.failed_sites == 0
+    assert call_count == 2
+    assert len(sleep_calls) == 1  # One retry sleep
+
+
+@pytest.mark.asyncio
+async def test_retry_no_retry_for_permanent_error():
+    call_count = 0
+
+    async def mock_analysis(url: str, target_stack: str) -> AnalyzeResponse:
+        nonlocal call_count
+        call_count += 1
+        raise Exception("DNS resolution failed")
+
+    sleep_calls = []
+
+    async def mock_sleep(delay: float) -> None:
+        sleep_calls.append(delay)
+
+    config_path = FIXTURES / "no_retry_corpus.yml"
+    if not config_path.exists():
+        config_path.write_text(
+            "sites:\n"
+            "  - name: DNS Fail\n"
+            '    url: "https://dns.example.com"\n'
+            "    page_type: general\n"
+            "    expected_signals:\n"
+            '      - description: "test"\n'
+        )
+
+    policy = RetryPolicy(max_attempts=3, sleep_func=mock_sleep)
+    run = await run_evaluation(
+        corpus_path=config_path,
+        analysis_func=mock_analysis,
+        retry_policy=policy,
+    )
+
+    assert run.summary.failed_sites == 1
+    assert call_count == 1  # No retry for DNS failure
+    assert len(sleep_calls) == 0
+
+
+@pytest.mark.asyncio
+async def test_retry_exhaustion():
+    call_count = 0
+
+    async def mock_analysis(url: str, target_stack: str) -> AnalyzeResponse:
+        nonlocal call_count
+        call_count += 1
+        raise Exception("Connection timed out")
+
+    sleep_calls = []
+
+    async def mock_sleep(delay: float) -> None:
+        sleep_calls.append(delay)
+
+    config_path = FIXTURES / "exhaustion_corpus.yml"
+    if not config_path.exists():
+        config_path.write_text(
+            "sites:\n"
+            "  - name: Timeout Site\n"
+            '    url: "https://timeout.example.com"\n'
+            "    page_type: general\n"
+            "    expected_signals:\n"
+            '      - description: "test"\n'
+        )
+
+    policy = RetryPolicy(max_attempts=3, sleep_func=mock_sleep)
+    run = await run_evaluation(
+        corpus_path=config_path,
+        analysis_func=mock_analysis,
+        retry_policy=policy,
+    )
+
+    assert run.summary.failed_sites == 1
+    assert call_count == 3  # All attempts used
+    assert len(sleep_calls) == 2  # Two retry sleeps
+
+
+@pytest.mark.asyncio
+async def test_retry_attempt_count_tracking():
+    call_count = 0
+
+    async def mock_analysis(url: str, target_stack: str) -> AnalyzeResponse:
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            raise Exception("Connection refused")
+        return _make_response(score=100)
+
+    async def mock_sleep(delay: float) -> None:
+        pass
+
+    config_path = FIXTURES / "attempt_count_corpus.yml"
+    if not config_path.exists():
+        config_path.write_text(
+            "sites:\n"
+            "  - name: Multi Retry\n"
+            '    url: "https://multiretry.example.com"\n'
+            "    page_type: general\n"
+            "    expected_signals:\n"
+            '      - description: "test"\n'
+        )
+
+    policy = RetryPolicy(max_attempts=5, sleep_func=mock_sleep)
+    run = await run_evaluation(
+        corpus_path=config_path,
+        analysis_func=mock_analysis,
+        retry_policy=policy,
+    )
+
+    success = run.results[0]
+    assert isinstance(success, SiteSuccess)
+    assert success.attempt_count == 3
+
+
+@pytest.mark.asyncio
+async def test_retry_concurrency_bounded_during_retries():
+    max_concurrent = 0
+    current_concurrent = 0
+
+    async def mock_analysis(url: str, target_stack: str) -> AnalyzeResponse:
+        nonlocal max_concurrent, current_concurrent
+        current_concurrent += 1
+        max_concurrent = max(max_concurrent, current_concurrent)
+        await asyncio.sleep(0.05)
+        current_concurrent -= 1
+        return _make_response(score=100)
+
+    async def mock_sleep(delay: float) -> None:
+        pass
+
+    config_path = FIXTURES / "retry_concurrency_corpus.yml"
+    if not config_path.exists():
+        config_path.write_text(
+            "sites:\n"
+            + "\n".join(
+                [
+                    f"  - name: Site {i}\n"
+                    f'    url: "https://site{i}.example.com"\n'
+                    "    page_type: general\n"
+                    "    expected_signals:\n"
+                    '      - description: "test"\n'
+                    for i in range(6)
+                ]
+            )
+        )
+
+    policy = RetryPolicy(max_attempts=2, sleep_func=mock_sleep)
+    run = await run_evaluation(
+        corpus_path=config_path,
+        analysis_func=mock_analysis,
+        concurrency=2,
+        retry_policy=policy,
+    )
+
+    assert run.summary.total_sites == 6
+    assert max_concurrent <= 2
