@@ -380,10 +380,33 @@ button:disabled {
   border-bottom: 1px solid var(--color-border);
 }
 
+.code-block-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.code-file-path {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .code-language {
   font-size: 0.75rem;
   color: var(--color-text-muted);
   text-transform: uppercase;
+}
+
+.code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .copy-button {
@@ -397,8 +420,34 @@ button:disabled {
   transition: all 0.2s;
 }
 
-.copy-button:hover {
+.copy-button:hover:not(:disabled) {
   background: var(--color-bg);
+}
+
+.copy-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.code-toggle-button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.code-toggle-button:hover {
+  background: var(--color-bg);
+}
+
+.code-toggle-button:focus-visible,
+.copy-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .code-block pre {
@@ -408,10 +457,15 @@ button:disabled {
   background: #f8fafc;
 }
 
+.code-block pre.collapsed {
+  display: none;
+}
+
 .code-block code {
   font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
   font-size: 0.875rem;
   line-height: 1.5;
+  white-space: pre;
 }
 
 .markdown-report {

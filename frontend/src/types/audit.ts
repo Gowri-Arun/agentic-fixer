@@ -22,6 +22,8 @@ export interface Fix {
   why_it_matters: string;
   code_snippet: string;
   instructions: string[];
+  file_path?: string;
+  language?: string;
 }
 
 export interface EvidenceField {

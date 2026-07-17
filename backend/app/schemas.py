@@ -27,6 +27,8 @@ class Fix(BaseModel):
     why_it_matters: str
     code_snippet: str
     instructions: list[str]
+    file_path: str | None = None
+    language: str | None = None
 
 
 class AuditMetadata(BaseModel):
