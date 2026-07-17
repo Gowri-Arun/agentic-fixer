@@ -5,8 +5,7 @@ import { EmptyState } from "./components/EmptyState";
 import { ErrorState } from "./components/ErrorState";
 import { ExampleSelector } from "./components/ExampleSelector";
 import { ExportActions } from "./components/ExportActions";
-import { FixCard } from "./components/FixCard";
-import { IssueCard } from "./components/IssueCard";
+import { GroupedFindings } from "./components/GroupedFindings";
 import { LoadingState } from "./components/LoadingState";
 import { MarkdownReport } from "./components/MarkdownReport";
 import { ScoreBreakdown } from "./components/ScoreBreakdown";
@@ -86,27 +85,7 @@ function App() {
               categoryScores={computeCategoryScores(result.issues)}
             />
 
-            {result.issues.length > 0 && (
-              <section className="issues-section">
-                <h2>Detected Issues ({result.issues.length})</h2>
-                <div className="issues-list">
-                  {result.issues.map((issue, index) => (
-                    <IssueCard key={`${issue.id}-${index}`} issue={issue} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {result.fixes.length > 0 && (
-              <section className="fixes-section">
-                <h2>Suggested Fixes ({result.fixes.length})</h2>
-                <div className="fixes-list">
-                  {result.fixes.map((fix, index) => (
-                    <FixCard key={`${fix.issue_id}-${index}`} fix={fix} />
-                  ))}
-                </div>
-              </section>
-            )}
+            <GroupedFindings issues={result.issues} fixes={result.fixes} />
 
             {result.issues.length === 0 && result.fixes.length === 0 && (
               <EmptyState />
