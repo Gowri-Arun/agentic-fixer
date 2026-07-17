@@ -1,0 +1,30 @@
+sites:
+  - name: Example Pricing
+    url: "https://example.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Visible pricing information"
+      - description: "Product or service schema markup"
+    tags:
+      - pricing
+      - schema
+    enabled: true
+    notes: "Tests pricing detection"
+
+  - name: Example FAQ
+    url: "https://example.com/faq"
+    page_type: faq
+    expected_signals:
+      - description: "FAQ content with questions and answers"
+      - description: "FAQ schema markup"
+    tags:
+      - faq
+    enabled: true
+
+  - name: Disabled Site
+    url: "https://example.com/disabled"
+    page_type: general
+    expected_signals:
+      - description: "General content"
+    enabled: false
+    notes: "Skipped during evaluation"

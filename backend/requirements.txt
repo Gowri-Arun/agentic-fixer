@@ -3,6 +3,7 @@ uvicorn
 requests
 beautifulsoup4
 pydantic
+pyyaml
 pytest
 httpx
 ruff
