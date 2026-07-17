@@ -30,11 +30,12 @@ def _parse_args():
     parser = argparse.ArgumentParser(
         description="Run real-site evaluation corpus through Agentic Fixer"
     )
+    default_corpus = Path(__file__).resolve().parent.parent / "evaluation" / "sites.yml"
     parser.add_argument(
         "--corpus",
         type=Path,
-        default=Path("evaluation/sites.yml"),
-        help="Path to corpus YAML file",
+        default=default_corpus,
+        help=f"Path to corpus YAML file (default: {default_corpus})",
     )
     parser.add_argument(
         "--output",
