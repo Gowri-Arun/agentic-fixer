@@ -1,4 +1,4 @@
-import type { Issue, Fix } from "../types/audit";
+import type { Issue, Fix, DetectorResult } from "../types/audit";
 import {
   CATEGORIES,
   UNCATORIZED_CATEGORY,
@@ -9,6 +9,7 @@ import { CategoryGroup } from "./CategoryGroup";
 interface GroupedFindingsProps {
   issues: Issue[];
   fixes: Fix[];
+  detectorResults?: DetectorResult[];
 }
 
 interface GroupedIssues {
@@ -16,7 +17,7 @@ interface GroupedIssues {
   issues: Issue[];
 }
 
-export function GroupedFindings({ issues, fixes }: GroupedFindingsProps) {
+export function GroupedFindings({ issues, fixes, detectorResults }: GroupedFindingsProps) {
   if (issues.length === 0) {
     return null;
   }
@@ -70,6 +71,7 @@ export function GroupedFindings({ issues, fixes }: GroupedFindingsProps) {
             category={getCategoryConfig(group.category)}
             issues={group.issues}
             fixes={fixes}
+            detectorResults={detectorResults}
             defaultExpanded={getMaxSeverity(group.issues) === "high"}
           />
         ))}

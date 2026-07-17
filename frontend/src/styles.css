@@ -759,6 +759,105 @@ button:disabled {
   outline-offset: -2px;
 }
 
+.issue-with-evidence {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.issue-with-evidence .issue-card {
+  border: none;
+  box-shadow: none;
+}
+
+.evidence-panel {
+  border-top: 1px solid var(--color-border);
+  padding: 0.75rem 1rem;
+}
+
+.evidence-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.evidence-toggle:hover {
+  color: var(--color-text);
+}
+
+.evidence-chevron {
+  transition: transform 0.2s;
+  font-size: 0.75rem;
+}
+
+.evidence-chevron.open {
+  transform: rotate(90deg);
+}
+
+.evidence-content {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+
+.evidence-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.evidence-meta strong {
+  color: var(--color-text);
+}
+
+.evidence-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evidence-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.evidence-field-name {
+  color: var(--color-text-muted);
+}
+
+.evidence-field-value {
+  font-family: monospace;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.evidence-empty {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.evidence-skipped {
+  padding: 0.5rem;
+  background: #fef3c7;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
 @media (max-width: 640px) {
   .header {
     padding: 1rem;

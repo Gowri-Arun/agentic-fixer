@@ -1,13 +1,20 @@
 import { useState } from "react";
-import type { Issue, Fix } from "../types/audit";
+import type { Issue, Fix, DetectorResult } from "../types/audit";
 import type { CategoryConfig } from "../config/categories";
 import { SEVERITY_ORDER } from "../config/categories";
-import { IssueCard } from "./IssueCard";
+import { IssueCardWithEvidence } from "./IssueCardWithEvidence";
+
+const PRIORITY_ORDER: Record<string, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
 
 interface CategoryGroupProps {
   category: CategoryConfig;
   issues: Issue[];
   fixes: Fix[];
+  detectorResults?: DetectorResult[];
   defaultExpanded?: boolean;
 }
 
@@ -21,20 +28,30 @@ export function CategoryGroup({
   category,
   issues,
   fixes,
+  detectorResults,
   defaultExpanded = true,
 }: CategoryGroupProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
+  const getFixesForIssue = (issueId: string): Fix[] =>
+    fixes.filter((fix) => fix.issue_id === issueId);
+
   const sortedIssues = [...issues].sort((a, b) => {
-    const rankA = SEVERITY_ORDER[a.severity] ?? 3;
-    const rankB = SEVERITY_ORDER[b.severity] ?? 3;
-    return rankA - rankB;
+    const severityRankA = SEVERITY_ORDER[a.severity] ?? 3;
+    const severityRankB = SEVERITY_ORDER[b.severity] ?? 3;
+    if (severityRankA !== severityRankB) {
+      return severityRankA - severityRankB;
+    }
+    const fixesA = getFixesForIssue(a.id);
+    const fixesB = getFixesForIssue(b.id);
+    const firstFixA = fixesA[0];
+    const firstFixB = fixesB[0];
+    const priorityA = firstFixA?.priority ? (PRIORITY_ORDER[firstFixA.priority] ?? 3) : 3;
+    const priorityB = firstFixB?.priority ? (PRIORITY_ORDER[firstFixB.priority] ?? 3) : 3;
+    return priorityA - priorityB;
   });
 
   const maxSeverity = sortedIssues.length > 0 ? sortedIssues[0]?.severity ?? null : null;
-
-  const getFixesForIssue = (issueId: string): Fix[] =>
-    fixes.filter((fix) => fix.issue_id === issueId);
 
   return (
     <div className="category-group">
@@ -77,7 +94,10 @@ export function CategoryGroup({
           ) : (
             sortedIssues.map((issue, index) => (
               <div key={`${issue.id}-${index}`} className="category-group-issue">
-                <IssueCard issue={issue} />
+                <IssueCardWithEvidence
+                  issue={issue}
+                  detectorResults={detectorResults}
+                />
                 {getFixesForIssue(issue.id).map((fix, fixIndex) => (
                   <div key={fixIndex} className="category-issue-fix">
                     <span className="category-issue-fix-title">

@@ -85,7 +85,11 @@ function App() {
               categoryScores={computeCategoryScores(result.issues)}
             />
 
-            <GroupedFindings issues={result.issues} fixes={result.fixes} />
+            <GroupedFindings
+              issues={result.issues}
+              fixes={result.fixes}
+              detectorResults={result.metadata.detector_results}
+            />
 
             {result.issues.length === 0 && result.fixes.length === 0 && (
               <EmptyState />
