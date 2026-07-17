@@ -3,6 +3,7 @@ import { analyzePage } from "./api/analyze";
 import { AnalyzeForm } from "./components/AnalyzeForm";
 import { EmptyState } from "./components/EmptyState";
 import { ErrorState } from "./components/ErrorState";
+import { EvaluationDashboard } from "./components/EvaluationDashboard";
 import { ExampleSelector } from "./components/ExampleSelector";
 import { ExportActions } from "./components/ExportActions";
 import { GroupedFindings } from "./components/GroupedFindings";
@@ -13,7 +14,10 @@ import { ScoreCard } from "./components/ScoreCard";
 import { computeCategoryScores } from "./utils/categoryScores";
 import type { AnalyzeResponse, TargetStack } from "./types/audit";
 
+type View = "audit" | "evaluation";
+
 function App() {
+  const [activeView, setActiveView] = useState<View>("audit");
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,55 +57,83 @@ function App() {
         <h1>Agentic Fixer</h1>
         <p>Analyze web pages for agent-readiness issues</p>
       </header>
+      <nav className="main-nav" role="navigation" aria-label="Main navigation">
+        <button
+          type="button"
+          className={`nav-tab ${activeView === "audit" ? "nav-tab-active" : ""}`}
+          onClick={() => setActiveView("audit")}
+          aria-current={activeView === "audit" ? "page" : undefined}
+        >
+          Audit
+        </button>
+        <button
+          type="button"
+          className={`nav-tab ${activeView === "evaluation" ? "nav-tab-active" : ""}`}
+          onClick={() => setActiveView("evaluation")}
+          aria-current={activeView === "evaluation" ? "page" : undefined}
+        >
+          Evaluation
+        </button>
+      </nav>
       <main className="main">
-        <div className="card">
-          <AnalyzeForm onSubmit={handleAnalyze} isLoading={isLoading} />
-        </div>
+        {activeView === "audit" && (
+          <>
+            <div className="card">
+              <AnalyzeForm onSubmit={handleAnalyze} isLoading={isLoading} />
+            </div>
 
-        <ExampleSelector
-          targetStack={targetStack}
-          onResult={handleDemoResult}
-          onError={handleDemoError}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-        />
-
-        {error && <ErrorState message={error} />}
-
-        {isLoading && <LoadingState />}
-
-        {result && !isLoading && (
-          <div className="results">
-            <ScoreCard
-              score={result.score}
-              grade={result.grade}
-              summary={result.summary}
-              metadata={result.metadata}
+            <ExampleSelector
+              targetStack={targetStack}
+              onResult={handleDemoResult}
+              onError={handleDemoError}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
             />
 
-            <ScoreBreakdown
-              overallScore={result.score}
-              overallGrade={result.grade}
-              categoryScores={computeCategoryScores(result.issues)}
-            />
+            {error && <ErrorState message={error} />}
 
-            <GroupedFindings
-              issues={result.issues}
-              fixes={result.fixes}
-              detectorResults={result.metadata.detector_results}
-            />
+            {isLoading && <LoadingState />}
 
-            {result.issues.length === 0 && result.fixes.length === 0 && (
-              <EmptyState />
+            {result && !isLoading && (
+              <div className="results">
+                <ScoreCard
+                  score={result.score}
+                  grade={result.grade}
+                  summary={result.summary}
+                  metadata={result.metadata}
+                />
+
+                <ScoreBreakdown
+                  overallScore={result.score}
+                  overallGrade={result.grade}
+                  categoryScores={computeCategoryScores(result.issues)}
+                />
+
+                <GroupedFindings
+                  issues={result.issues}
+                  fixes={result.fixes}
+                  detectorResults={result.metadata.detector_results}
+                />
+
+                {result.issues.length === 0 && result.fixes.length === 0 && (
+                  <EmptyState />
+                )}
+
+                <MarkdownReport markdown={result.markdown_report} />
+
+                <ExportActions result={result} />
+              </div>
             )}
 
-            <MarkdownReport markdown={result.markdown_report} />
-
-            <ExportActions result={result} />
-          </div>
+            {!result && !isLoading && !error && <EmptyState />}
+          </>
         )}
 
-        {!result && !isLoading && !error && <EmptyState />}
+        {activeView === "evaluation" && (
+          <EvaluationDashboard
+            onBackToAudit={() => setActiveView("audit")}
+          />
+        )}
       </main>
     </div>
   );
