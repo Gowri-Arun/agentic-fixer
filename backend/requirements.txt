@@ -5,5 +5,6 @@ beautifulsoup4
 pydantic
 pyyaml
 pytest
+pytest-asyncio
 httpx
 ruff

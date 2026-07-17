@@ -9,7 +9,7 @@ htmlcov/
 .venv/
 venv/
 env/
-
+*.tsbuildinfo
 # Environment
 .env
 .env.local
