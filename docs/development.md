@@ -196,6 +196,80 @@ python -m scripts.baseline compare --run output/evaluation/latest.json
 - **External failure ≠ regression**: A site timeout, 403, or DNS
   failure does not mean the detectors regressed
 
+### LLM Proposal Analysis (Optional)
+
+The evaluation system includes an **optional LLM adapter** that can
+analyse detector-improvement proposals and suggest rule changes.
+
+**Important safety properties:**
+- **Disabled by default** — requires explicit provider + API key
+- **Never executes** generated code
+- **Never edits** detector files automatically
+- **Never commits** changes or opens pull requests
+- **All output marked as untrusted** — requires human review
+
+**Configuration:**
+
+Set environment variables before running:
+
+```bash
+# Required: LLM provider and API key
+export DETECTION_LLM_PROVIDER=openai    # or anthropic, ollama
+export DETECTION_LLM_API_KEY=sk-...
+
+# Optional: custom model or base URL
+export DETECTION_LLM_MODEL=gpt-4o-mini
+export DETECTION_LLM_BASE_URL=https://api.openai.com/v1
+```
+
+**Data sent to the LLM:**
+- Detector name and version
+- Warning type and explanation
+- Site name, URL, and page type
+- Expected signals from corpus (descriptions only)
+- Observed issue IDs
+- Evidence signals (key-value pairs)
+- Signal summary (text length, heading count, etc.)
+- Sanitised text excerpts (emails, cards, keys redacted)
+- Related test file paths
+
+**Data NOT sent:**
+- Raw HTML content
+- Authentication credentials
+- Cookies or session data
+- Personal identifiable information (redacted)
+- Full page source
+
+**Usage:**
+
+```bash
+cd backend
+
+# Generate proposals with LLM analysis
+python -m scripts.propose --llm --provider openai -v
+
+# Save to file
+python -m scripts.propose --llm --save-dir output/proposals -v
+
+# Use JSON output
+python -m scripts.propose --llm --format json --save-dir output/proposals
+```
+
+**Provider-specific notes:**
+
+| Provider | Default Model | Notes |
+|----------|--------------|-------|
+| OpenAI | gpt-4o-mini | Requires `httpx` package |
+| Anthropic | claude-3-haiku | Requires `httpx` package |
+| Ollama | llama3.2 | Local model, no API key needed |
+
+**Privacy implications:**
+- Proposal context is sent to external API (OpenAI/Anthropic)
+- Text excerpts are sanitised but may contain page structure
+- No raw HTML or credentials are transmitted
+- Ollama runs locally — no data leaves your machine
+- Review all LLM output before applying any suggestions
+
 ## Project Structure
 
 ```
@@ -213,14 +287,15 @@ backend/
 │   ├── fixes/             Fix generation
 │   ├── reporting/         Grade, summary, metadata
 │   ├── services/          Analysis orchestration
-│   └── evaluation/        Evaluation runner, API, baseline
+│   └── evaluation/        Evaluation runner, API, baseline, proposals
 ├── evaluation/
 │   ├── sites.yml          Full evaluation corpus (25 sites)
 │   └── smoke.yml          Smoke test corpus (5 sites)
 ├── scripts/
 │   ├── evaluate_sites.py  Full evaluation CLI
 │   ├── smoke_evaluate.py  Smoke evaluation CLI
-│   └── baseline.py        Baseline management CLI
+│   ├── baseline.py        Baseline management CLI
+│   └── propose.py         Proposal context + LLM CLI
 ├── sample_pages/          Demo HTML files
 ├── tests/                 Backend tests
 └── requirements.txt       Python dependencies
