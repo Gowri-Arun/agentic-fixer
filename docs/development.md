@@ -74,6 +74,40 @@ playwright install chromium --with-deps
 python -m scripts.evaluate_sites --render-mode auto -v
 ```
 
+### Smoke Evaluation (Pull Requests)
+
+**Smoke Evaluation** runs on pull requests when backend paths change
+(detectors, parser, fetchers, scoring, evaluation). It uses a small
+corpus of 5 stable sites (`evaluation/smoke.yml`) and applies tolerant
+regression rules:
+
+- **Does not fail** for isolated timeouts, 403s, or external-site changes
+- **Fails** for response-schema breakage (missing required fields)
+- **Fails** for catastrophic runner failures (unhandled exceptions)
+- **Fails** when too many previously-working sites crash
+- **Fails** for significant increases in validation warnings
+
+Unit tests remain the primary mandatory gate. Smoke evaluation is
+advisory — it reports regressions via artifacts and annotations but does
+not block merging.
+
+To run locally:
+```bash
+cd backend
+python -m scripts.smoke_evaluate -v
+```
+
+### Scheduled vs Smoke Evaluation
+
+| Aspect | Smoke (PR) | Scheduled (Weekly) |
+|--------|-----------|-------------------|
+| Trigger | PR (path-filtered) | Weekly + manual |
+| Corpus | 5 stable sites | Full 25-site corpus |
+| Timeout | 15 minutes | 60 minutes |
+| Regression rules | Tolerant | Standard |
+| Blocks merge | No (advisory) | No |
+| Artifacts | 30-day retention | 90-day retention |
+
 ## Project Structure
 
 ```

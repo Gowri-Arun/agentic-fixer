@@ -1,0 +1,163 @@
+name: Smoke Evaluation
+
+on:
+  pull_request:
+    paths:
+      - "backend/app/detectors/**"
+      - "backend/app/parser.py"
+      - "backend/app/fetcher.py"
+      - "backend/app/fetcher_fallback.py"
+      - "backend/app/fetcher_browser.py"
+      - "backend/app/scoring.py"
+      - "backend/app/evaluation/**"
+      - "backend/app/services/analysis.py"
+      - "backend/scripts/evaluate_sites.py"
+      - "backend/scripts/smoke_evaluate.py"
+      - "backend/evaluation/smoke.yml"
+  workflow_dispatch:
+    inputs:
+      max_failure_pct:
+        description: "Max tolerated failure percentage"
+        required: false
+        default: "50"
+        type: string
+      max_failure_count:
+        description: "Max tolerated absolute failure count"
+        required: false
+        default: "2"
+        type: string
+
+concurrency:
+  group: smoke-evaluation-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Required)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Ruff lint
+        run: ruff check backend
+
+      - name: Run Ruff format check
+        run: ruff format --check backend
+
+      - name: Run tests
+        run: pytest
+
+  smoke-evaluate:
+    name: Smoke Evaluation (Advisory)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    continue-on-error: true
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Run smoke evaluation
+        id: smoke
+        working-directory: backend
+        env:
+          MAX_FAILURE_PCT: ${{ inputs.max_failure_pct || '50' }}
+          MAX_FAILURE_COUNT: ${{ inputs.max_failure_count || '2' }}
+        run: |
+          set +e
+          ARGS="--output output/evaluation/smoke -v"
+          ARGS="$ARGS --max-failure-pct $MAX_FAILURE_PCT"
+          ARGS="$ARGS --max-failure-count $MAX_FAILURE_COUNT"
+          ARGS="$ARGS --concurrency 2"
+          python -m scripts.smoke_evaluate $ARGS
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results-${{ github.run_id }}
+          path: |
+            backend/output/evaluation/smoke/latest.json
+            backend/output/evaluation/smoke/smoke-report.md
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Print smoke summary
+        if: always()
+        working-directory: backend
+        run: |
+          if [ -f output/evaluation/smoke/latest.json ]; then
+            python - <<'PYEOF'
+          import json
+          from pathlib import Path
+
+          with open("output/evaluation/smoke/latest.json") as f:
+              data = json.load(f)
+
+          if data.get("catastrophic"):
+              print("SMOKE RESULT: CATASTROPHIC FAILURE")
+              print(f"Error: {data.get('error', 'unknown')}")
+          else:
+              s = data.get("summary", {})
+              print("Smoke Evaluation Summary")
+              print(f"  Sites: {s.get('total_sites', 0)} total, "
+                    f"{s.get('successful_sites', 0)} ok, "
+                    f"{s.get('failed_sites', 0)} failed")
+              print(f"  Average score: {s.get('average_score', 0):.1f}")
+          PYEOF
+          else
+            echo "No smoke evaluation output found"
+          fi
+
+      - name: Report regression status
+        if: always()
+        working-directory: backend
+        run: |
+          python - <<'PYEOF'
+          import sys
+          from pathlib import Path
+
+          report = Path("output/evaluation/smoke/smoke-report.md")
+          if not report.exists():
+              print("No smoke report found")
+              sys.exit(0)
+
+          content = report.read_text()
+          if "**FAIL:**" in content:
+              print("::warning::Smoke evaluation detected regressions")
+              print("See smoke-results artifact for full details")
+          elif "PASS" in content:
+              print("::notice::Smoke evaluation passed")
+          else:
+              print("::notice::Smoke evaluation completed")
+          PYEOF
