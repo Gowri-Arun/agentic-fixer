@@ -1,5 +1,6 @@
 import type {
   ApiState,
+  ComparisonResponse,
   EvaluationHistoryResponse,
   EvaluationRegressionsResponse,
   EvaluationRun,
@@ -71,6 +72,29 @@ export async function fetchRegressions(): Promise<EvaluationRegressionsResponse>
 
   if (!response.ok) {
     let detail = "Failed to fetch evaluation regressions.";
+
+    try {
+      const data = await response.json();
+      detail = data.detail ?? detail;
+    } catch {
+      // Keep default error message.
+    }
+
+    throw new Error(detail);
+  }
+
+  return response.json();
+}
+
+export async function fetchComparison(
+  baseline: string,
+  candidate: string
+): Promise<ComparisonResponse> {
+  const params = new URLSearchParams({ baseline, candidate });
+  const response = await fetch(`${API_BASE_URL}/evaluation/compare?${params}`);
+
+  if (!response.ok) {
+    let detail = "Failed to compare evaluation runs.";
 
     try {
       const data = await response.json();

@@ -90,3 +90,31 @@ export interface ApiState<T> {
   data: T | null;
   error: string | null;
 }
+
+export type RegressionClassification = "blocking" | "warning" | "improved" | "inconclusive";
+
+export interface RunIdentity {
+  run_id: string;
+  started_at: string;
+  git_commit: string | null;
+}
+
+export interface SiteComparison {
+  url: string;
+  name: string;
+  page_type: PageType;
+  classification: RegressionClassification;
+  baseline_score: number | null;
+  candidate_score: number | null;
+  baseline_issues: string[];
+  candidate_issues: string[];
+  issue_delta: number;
+  score_delta: number;
+  reason: string;
+}
+
+export interface ComparisonResponse {
+  baseline: RunIdentity;
+  candidate: RunIdentity;
+  comparisons: SiteComparison[];
+}
