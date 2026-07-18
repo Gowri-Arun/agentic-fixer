@@ -9,8 +9,13 @@ import type {
   EvaluationRun,
   EvaluationStats,
   EvaluationRegressionsResponse,
+  EvaluationHistoryResponse,
   ApiState,
 } from "../types/evaluation";
+import { IssueFrequencyChart } from "./IssueFrequencyChart";
+import { ValidationWarningsChart } from "./ValidationWarningsChart";
+import { ScoreHistoryChart } from "./ScoreHistoryChart";
+import { EvaluationSiteTable } from "./EvaluationSiteTable";
 
 interface EvaluationDashboardProps {
   onBackToAudit?: () => void;
@@ -52,10 +57,17 @@ export function EvaluationDashboard({ onBackToAudit }: EvaluationDashboardProps)
   });
   const [historyCount, setHistoryCount] = useState<number>(0);
 
+  const [historyState, setHistoryState] = useState<ApiState<EvaluationHistoryResponse>>({
+    status: "idle",
+    data: null,
+    error: null,
+  });
+
   const loadDashboard = useCallback(async () => {
     setRunState({ status: "loading", data: null, error: null });
     setStatsState({ status: "loading", data: null, error: null });
     setRegressionsState({ status: "loading", data: null, error: null });
+    setHistoryState({ status: "loading", data: null, error: null });
 
     try {
       const [run, stats, regressions, history] = await Promise.all([
@@ -68,6 +80,7 @@ export function EvaluationDashboard({ onBackToAudit }: EvaluationDashboardProps)
       setRunState({ status: "success", data: run, error: null });
       setStatsState({ status: "success", data: stats, error: null });
       setRegressionsState({ status: "success", data: regressions, error: null });
+      setHistoryState({ status: "success", data: history, error: null });
       setHistoryCount(history.runs.length);
     } catch (err) {
       const message =
@@ -84,6 +97,11 @@ export function EvaluationDashboard({ onBackToAudit }: EvaluationDashboardProps)
         error: message,
       }));
       setRegressionsState((prev) => ({
+        ...prev,
+        status: "error",
+        error: message,
+      }));
+      setHistoryState((prev) => ({
         ...prev,
         status: "error",
         error: message,
@@ -274,6 +292,39 @@ export function EvaluationDashboard({ onBackToAudit }: EvaluationDashboardProps)
                 </div>
               </div>
             )}
+
+          {runState.data.results.length > 0 && (
+            <>
+              <div className="card dashboard-section">
+                <IssueFrequencyChart
+                  results={runState.data.results.filter(
+                    (r): r is Extract<typeof r, { status: "success" }> =>
+                      r.status === "success"
+                  )}
+                />
+              </div>
+
+              <div className="card dashboard-section">
+                <ValidationWarningsChart
+                  results={runState.data.results.filter(
+                    (r): r is Extract<typeof r, { status: "failure" }> =>
+                      r.status === "failure"
+                  )}
+                />
+              </div>
+
+              <div className="card dashboard-section">
+                <h3>Site Results</h3>
+                <EvaluationSiteTable results={runState.data.results} />
+              </div>
+            </>
+          )}
+
+          {historyState.data && historyState.data.runs.length > 1 && (
+            <div className="card dashboard-section">
+              <ScoreHistoryChart runs={historyState.data.runs} />
+            </div>
+          )}
         </>
       )}
     </div>
