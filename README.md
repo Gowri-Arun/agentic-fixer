@@ -24,6 +24,8 @@ Modern web pages need to be understandable by humans, search engines, and AI age
 - JSON and Markdown export
 - Copyable code snippets
 - Backend and frontend CI
+- Automated real-site evaluation with browser fallback
+- Baseline-managed regression tracking
 
 ## Supported Checks
 
@@ -106,6 +108,22 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 
 Full API documentation: [docs/api.md](docs/api.md)
 
+## Automated Evaluation
+
+Agentic Fixer includes an automated real-site evaluation system that
+tests detectors against live websites on a schedule and on pull requests.
+
+- **Weekly evaluation** runs the full 25-site corpus with browser fallback
+- **PR smoke tests** run 5 stable sites on relevant backend changes
+- **Baselines** track approved regression reference points
+
+Evaluation does **not** bypass authentication or anti-bot controls.
+Live websites change without notice; a failing evaluation does not
+automatically mean the product regressed.
+
+Evaluation documentation: [docs/development.md](docs/development.md)
+Architecture details: [docs/architecture.md](docs/architecture.md)
+
 ## Demo Flow
 
 1. Start the backend server
@@ -144,12 +162,15 @@ make check
 
 - Detection is heuristic and rule-based
 - Raw `requests` fetching may not fully capture JavaScript-rendered pages
+  (browser fallback available via Playwright)
 - Generated snippets use placeholders and should be reviewed before production use
 - No automatic code patching yet
+- Live evaluation sites may change without notice, affecting scores
+- Validation warnings are review signals, not absolute ground truth
+- No raw HTML is persisted from evaluation runs
 
 ## Roadmap
 
-- JavaScript-rendered page support
 - Richer schema extraction
 - GitHub PR patch generation
 - Browser extension

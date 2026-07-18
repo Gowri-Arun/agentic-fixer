@@ -157,6 +157,45 @@ python -m scripts.baseline compare --run output/evaluation/latest.json
 - Without running the full evaluation first
 - As a quick fix for failing CI
 
+### Evaluation Data Flow
+
+```
+1. Corpus YAML (evaluation/sites.yml or smoke.yml)
+   ↓
+2. Runner loads sites, filters enabled
+   ↓
+3. Per-site analysis (concurrent, semaphore-bounded)
+   ↓
+4. Fetcher: HTTP first, optional browser fallback
+   ↓
+5. Parser extracts signals (text, headings, schemas, keywords)
+   ↓
+6. Detectors run, producing evidence and issues
+   ↓
+7. Scoring: 100 - severity penalties = final score
+   ↓
+8. Validation: compare signals vs expectations → warnings
+   ↓
+9. Results: SiteSuccess or SiteFailure per site
+   ↓
+10. Aggregate: summary, scores by type, durations
+   ↓
+11. Output: latest.json, CSV, failed_sites.json, reports
+```
+
+### Important Caveats
+
+- **Live websites change**: Scores may shift due to external changes
+  (page redesigns, content updates), not product regressions
+- **Validation warnings are review signals**: They help identify
+  potential issues but are not absolute ground truth
+- **No auth bypass**: The system does not log in or bypass anti-bot
+  controls; sites requiring authentication will fail
+- **No raw HTML persisted**: Only metadata, scores, and issue IDs
+  are stored; full HTML is discarded after analysis
+- **External failure ≠ regression**: A site timeout, 403, or DNS
+  failure does not mean the detectors regressed
+
 ## Project Structure
 
 ```
@@ -165,12 +204,23 @@ backend/
 │   ├── main.py           FastAPI application
 │   ├── schemas.py         Pydantic models
 │   ├── fetcher.py         HTML fetching
+│   ├── fetcher_fallback.py HTTP → browser fallback
+│   ├── fetcher_browser.py  Playwright browser rendering
 │   ├── parser.py          HTML parsing
 │   ├── scoring.py         Score calculation
 │   ├── demo_pages.py      Demo example management
 │   ├── detectors/         Detection rules
 │   ├── fixes/             Fix generation
-│   └── reporting/         Grade, summary, metadata
+│   ├── reporting/         Grade, summary, metadata
+│   ├── services/          Analysis orchestration
+│   └── evaluation/        Evaluation runner, API, baseline
+├── evaluation/
+│   ├── sites.yml          Full evaluation corpus (25 sites)
+│   └── smoke.yml          Smoke test corpus (5 sites)
+├── scripts/
+│   ├── evaluate_sites.py  Full evaluation CLI
+│   ├── smoke_evaluate.py  Smoke evaluation CLI
+│   └── baseline.py        Baseline management CLI
 ├── sample_pages/          Demo HTML files
 ├── tests/                 Backend tests
 └── requirements.txt       Python dependencies

@@ -131,3 +131,33 @@ The final score is clamped between 0 and 100.
 | 75–89 | Good |
 | 50–74 | Needs Work |
 | 0–49 | Poor |
+
+## Evaluation Context
+
+Detection rules are tested against real websites via the automated
+evaluation system.  Each detector returns structured evidence beyond
+pass/fail, including matched keywords, schema presence flags, and
+signal counts.
+
+### Validation Warnings
+
+The evaluation validator compares detector outputs against corpus
+expectations to identify potential issues:
+
+- **possible_fetch_failure**: A known page type (e.g., pricing) has
+  no visible signals, suggesting the fetch failed
+- **possible_false_negative**: Page signals suggest an issue should
+  have been raised but was not
+- **possible_false_positive**: An issue was raised with very weak
+  supporting signals
+
+These warnings are **review signals**, not absolute ground truth.
+They help identify potential issues but require human judgment to
+confirm whether the detector or the page is at fault.
+
+### Limitations
+
+- Detection is heuristic; false positives and negatives are expected
+- Live websites change without notice, affecting evaluation scores
+- JavaScript-rendered content may not be detected without browser mode
+- Sites requiring authentication will fail evaluation
