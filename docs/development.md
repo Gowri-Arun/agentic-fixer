@@ -108,6 +108,55 @@ python -m scripts.smoke_evaluate -v
 | Blocks merge | No (advisory) | No |
 | Artifacts | 30-day retention | 90-day retention |
 
+### Baseline Management
+
+The evaluation system uses **baselines** to track approved regression
+reference points.  A baseline is a compact JSON manifest containing
+aggregate metrics and per-site outcomes — never raw HTML.
+
+**Baseline manifest contents:**
+- Run timestamp and app version (git commit hash)
+- Corpus hash (SHA-256 of the YAML file) for detecting corpus changes
+- Aggregate metrics (average score, success/failure counts)
+- Per-site status, scores, and issue IDs
+
+**Workflow:**
+
+```bash
+cd backend
+
+# 1. Create a candidate baseline
+python -m scripts.baseline create -v
+
+# 2. Review the candidate
+python -m scripts.baseline status
+
+# 3. Approve it (explicit action required)
+python -m scripts.baseline approve
+
+# 4. Compare a future run against the baseline
+python -m scripts.baseline compare --run output/evaluation/latest.json
+```
+
+**Safety rules:**
+- Approved baselines are never overwritten automatically
+- The `create` command refuses to replace an approved baseline
+  without `--approve`
+- CI never auto-updates the baseline
+- Corpus changes are tracked separately from detector changes
+  (via corpus hash vs app version)
+
+**When to update the baseline:**
+- After intentional detector improvements that change scores
+- After adding or removing sites from the corpus
+- After fixing bugs that were artificially lowering scores
+- When external site changes cause permanent score shifts
+
+**When NOT to update the baseline:**
+- To mask regressions
+- Without running the full evaluation first
+- As a quick fix for failing CI
+
 ## Project Structure
 
 ```
