@@ -53,6 +53,27 @@ Use concise conventional-style commits:
 - TypeScript build
 - Vite production build
 
+**Real-Site Evaluation** runs weekly (Monday 06:00 UTC) and on manual dispatch:
+- Installs Playwright Chromium for browser fallback
+- Runs the evaluation corpus with automatic HTTP → browser fallback
+- Generates JSON, CSV, and Markdown reports
+- Compares against the previous run when available
+- Uploads all artifacts with 90-day retention
+
+To trigger manually:
+1. Go to Actions → Real-Site Evaluation
+2. Click "Run workflow"
+3. Choose render mode (`auto` for browser fallback, `html-only` for HTTP only)
+4. Optionally limit sites or adjust concurrency
+
+To run locally:
+```bash
+cd backend
+pip install -r requirements.txt
+playwright install chromium --with-deps
+python -m scripts.evaluate_sites --render-mode auto -v
+```
+
 ## Project Structure
 
 ```
