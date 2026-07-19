@@ -1,15 +1,34 @@
 # Demo Guide
 
-## Run Backend
+This guide provides a reproducible end-to-end demonstration of
+Agentic Fixer's audit and evaluation capabilities.
+
+## Prerequisites
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+For browser fallback (optional):
+
+```bash
+pip install playwright
+playwright install chromium --with-deps
+```
+
+## Part 1: Start Services
+
+**Terminal 1 — Backend:**
 
 ```bash
 cd backend
 uvicorn app.main:app --reload
 ```
 
-The backend will start at `http://127.0.0.1:8000`.
+Backend starts at `http://127.0.0.1:8000`.
 
-## Run Frontend
+**Terminal 2 — Frontend:**
 
 ```bash
 cd frontend
@@ -17,55 +36,317 @@ npm install
 npm run dev
 ```
 
-The frontend will start at `http://localhost:5173`.
+Frontend starts at `http://localhost:5173`.
 
-## Deterministic Examples
+## Part 2: Deterministic Audit (No Network Required)
 
-Agentic Fixer includes four sample pages for deterministic analysis:
+These steps use built-in sample pages and work offline.
 
-| Example ID | Description | Expected Issues |
-|------------|-------------|-----------------|
-| `faq-no-schema` | FAQ content without JSON-LD | `missing_faq_schema` |
-| `saas-pricing-missing-schema` | Pricing page without Product/Service schema | `missing_product_or_service_schema`, `missing_policy_surface` |
-| `good-agent-ready-page` | Page with proper structured data | None |
-| `bad-heading-structure` | Page with heading hierarchy issues | `multiple_h1`, `heading_hierarchy_jump` |
+### 2.1 Run a Normal URL Audit
 
-## Suggested Demo Script
+1. Open `http://localhost:5173`
+2. Click the **Audit** tab (default)
+3. Click **"Good agent-ready page"** in the example selector
+4. Observe:
+   - Score: **100** (Excellent)
+   - Summary: "No issues detected"
+   - No issues or fixes listed
 
-1. **Start the services**
-   - Open two terminals
-   - Run backend in one, frontend in the other
+### 2.2 Show Intent Preview
 
-2. **Open the frontend**
-   - Navigate to `http://localhost:5173`
+1. Click **"FAQ without schema"**
+2. Before results load, note the example description:
+   "FAQ content is visible, but FAQPage JSON-LD is missing."
+3. This tells the audience what to expect before the detector runs
 
-3. **Try the good example first**
-   - Click "Good agent-ready page"
-   - Show the score of 100 and "No issues detected"
+### 2.3 Show Overall and Category Scores
 
-4. **Try the FAQ example**
-   - Click "FAQ without schema"
-   - Show the missing FAQ schema issue
-   - Show the generated fix with JSON-LD snippet
+After the FAQ example loads:
 
-5. **Switch target stack**
-   - Change from "Next.js 13 App Router" to "Plain HTML"
-   - Re-run the same example
-   - Show that the generated snippet changes
+1. **Score Card** shows:
+   - Overall score (e.g., **80**)
+   - Grade: **Good**
+   - Summary text
+2. **Score Breakdown** shows:
+   - Overall score bar
+   - Category scores (structured_data, document_structure, etc.)
+   - Each category shows its own score and issue count
 
-6. **Copy a fix**
-   - Click "Copy" on a code snippet
-   - Show the "Copied" feedback
+### 2.4 Show Grouped Issues and Evidence
 
-7. **Export the report**
-   - Click "Copy Markdown" to copy the report
-   - Click "Download JSON" to download the full analysis
+Scroll to **Grouped Findings**:
 
-8. **Analyze a live URL** (if network permits)
-   - Enter a real URL
-   - Select target stack
-   - Click "Analyze"
+1. Issues are grouped by category (Structured Data, Document Structure)
+2. Each issue shows:
+   - Issue ID and severity badge
+   - Description
+   - Expandable **Evidence** panel showing detector signals
+3. Click the evidence expander to show:
+   - Matched keywords
+   - Schema presence flags
+   - Signal counts
 
-## Fallback
+### 2.5 Show Generated Fixes
 
-If live URLs fail due to network or site blocking, use the deterministic demo examples. They provide predictable results without requiring external network access.
+For the FAQ example:
+
+1. The **Fix** section shows a code snippet
+2. The snippet is tailored to the selected target stack
+3. Click **Copy** to see the "Copied" feedback
+4. Change target stack from "Next.js 13 App Router" to "Plain HTML"
+5. Re-run the same example — notice the generated snippet changes
+
+### 2.6 Switch Target Stack
+
+1. Change dropdown to **"React SPA"**
+2. Click **"Bad heading structure"**
+3. Show that fixes now use React component syntax
+4. Change to **"Plain HTML"** and re-run
+5. Show that fixes now use vanilla HTML/script tags
+
+### 2.7 Export the Report
+
+1. Click **"Copy Markdown"** — copies the full audit report
+2. Click **"Download JSON"** — downloads the complete analysis
+3. Click **"Copy all fixes"** — copies just the code snippets
+
+### 2.8 Show Automatic Browser Fallback (If Playwright Installed)
+
+To demonstrate browser fallback metadata:
+
+1. The backend must be running with Playwright installed
+2. Enter a URL known to require JavaScript rendering
+   (or use a fixture page)
+3. In the audit response, check `metadata.detector_results` for
+   entries showing `fetch_mode: "browser"` or `fetch_mode: "http"`
+4. The `page_quality_score` in metadata indicates why fallback
+   was triggered (low quality → browser render)
+
+## Part 3: Live URL Audit (Network Required)
+
+### 3.1 Analyze a Live URL
+
+1. Enter `https://github.com/pricing` in the URL field
+2. Select target stack: **Next.js 13 App Router**
+3. Click **Analyze**
+4. Observe:
+   - Real-world score and issues
+   - Detector evidence from a live page
+   - Generated fixes for the actual page
+
+### 3.2 Show Real-World Variability
+
+1. Analyze the same URL again
+2. Scores may differ slightly (external site changes)
+3. This demonstrates why evaluation baselines matter
+
+## Part 4: Evaluation System
+
+### 4.1 Run the Corpus Evaluation CLI
+
+```bash
+cd backend
+python -m scripts.evaluate_sites --max-sites 5 -v --render-mode html-only
+```
+
+This runs 5 sites from the corpus. Output includes:
+
+```
+Evaluation Complete
+========================================
+Total sites:    5
+Successful:     4
+Failed:         1
+Average score:  72.5
+Duration:       12.3s
+Output:         output/evaluation
+```
+
+Output files written:
+
+```bash
+ls output/evaluation/
+# latest.json     — Full run data
+# latest.csv      — Tabular summary
+# failed_sites.json — Failed site details
+```
+
+### 4.2 Show Generated Artifacts
+
+**JSON** (`latest.json`):
+
+```bash
+python -c "
+import json
+with open('output/evaluation/latest.json') as f:
+    data = json.load(f)
+print(f'Run ID: {data[\"run_id\"]}')
+print(f'Sites: {data[\"summary\"][\"total_sites\"]}')
+print(f'Average score: {data[\"summary\"][\"average_score\"]:.1f}')
+"
+```
+
+**CSV** (`latest.csv`):
+
+```bash
+head -5 output/evaluation/latest.csv
+# url,name,page_type,status,score,issue_count,...
+```
+
+**Markdown report** (generated by workflow):
+
+```bash
+cat output/evaluation/report.md  # If available
+```
+
+### 4.3 Open the Evaluation Dashboard
+
+1. With backend running, go to `http://localhost:5173`
+2. Click the **Evaluation** tab in the navigation
+3. The dashboard loads data from `/evaluation/latest`
+
+### 4.4 Show Issue-Frequency Analytics
+
+On the Evaluation tab, scroll to **Issue Frequency**:
+
+1. Bar chart showing issue counts by detector
+2. Top issues across all evaluated sites
+3. Hover over bars for exact counts
+
+### 4.5 Show Suspicious-Result Warnings
+
+In the evaluation results table:
+
+1. Sites with validation warnings show warning indicators
+2. Warning types include:
+   - `possible_fetch_failure` — page may not have loaded
+   - `possible_false_negative` — signals present but no issue raised
+   - `possible_false_positive` — issue raised with weak evidence
+3. These are review signals, not absolute ground truth
+
+### 4.6 Compare Two Evaluation Runs
+
+Run the evaluation twice to create two runs:
+
+```bash
+# First run
+python -m scripts.evaluate_sites --max-sites 3 -v
+
+# Second run (will overwrite latest.json)
+python -m scripts.evaluate_sites --max-sites 3 -v
+```
+
+Use the API to compare:
+
+```bash
+# Get run IDs from history
+curl http://127.0.0.1:8000/evaluation/history | python -m json.tool
+
+# Compare two runs (use actual run IDs)
+curl "http://127.0.0.1:8000/evaluation/compare?baseline=RUN_ID_1&candidate=RUN_ID_2"
+```
+
+Or use the frontend:
+
+1. Click **Regression Comparison** in the Evaluation dashboard
+2. Select baseline and candidate runs from dropdowns
+3. Click **Compare**
+4. View blocking regressions, warnings, and improvements
+
+### 4.7 Show the Scheduled GitHub Actions Workflow
+
+```bash
+cat .github/workflows/real-site-evaluation.yml
+```
+
+Key features to highlight:
+
+- **Trigger**: Weekly (Monday 06:00 UTC) + manual dispatch
+- **Render mode**: Configurable (auto for browser fallback)
+- **Artifacts**: JSON, CSV, Markdown reports uploaded
+- **Concurrency**: Cancels in-progress runs
+- **Timeout**: 60 minutes
+
+### 4.8 Show Baseline Management
+
+```bash
+cd backend
+
+# Create a candidate baseline
+python -m scripts.baseline create -v
+
+# View status
+python -m scripts.baseline status
+
+# Approve it
+python -m scripts.baseline approve
+
+# Compare against baseline
+python -m scripts.baseline compare --run output/evaluation/latest.json
+```
+
+Key safety features:
+
+- Approved baselines cannot be overwritten without `--approve`
+- Corpus changes tracked separately from detector changes
+- CI never auto-updates the baseline
+
+## Part 5: Smoke Evaluation (Pull Request)
+
+### 5.1 Run Smoke Evaluation Locally
+
+```bash
+cd backend
+python -m scripts.smoke_evaluate -v
+```
+
+This runs 5 stable sites with tolerant regression rules:
+
+- Does not fail for isolated timeouts or 403s
+- Fails for response-schema breakage
+- Fails for catastrophic runner failures
+- Fails when too many sites crash
+
+### 5.2 Show the Smoke Workflow
+
+```bash
+cat .github/workflows/smoke-evaluation.yml
+```
+
+Key features:
+
+- **Trigger**: PR when backend paths change (detectors, parser, fetchers, etc.)
+- **Two jobs**: Unit Tests (required) → Smoke Evaluation (advisory)
+- **15-minute timeout**
+- **Artifacts uploaded on failure** for debugging
+
+## Fallback: Offline Demo
+
+If external websites are unavailable, use only deterministic examples:
+
+1. Start backend and frontend
+2. Use the four built-in examples (no network required):
+   - `faq-no-schema` — FAQ without schema
+   - `saas-pricing-missing-schema` — Pricing without Product/Service schema
+   - `good-agent-ready-page` — Page with proper structured data
+   - `bad-heading-structure` — Heading hierarchy issues
+3. Skip live URL analysis (Part 3)
+4. Skip evaluation CLI (Part 4.1) — use pre-existing output if available
+5. Focus on the audit flow, score breakdown, and fix generation
+
+The deterministic examples provide predictable results and demonstrate
+all core features without external dependencies.
+
+## Demo Checklist
+
+- [ ] Backend starts without errors
+- [ ] Frontend loads at localhost:5173
+- [ ] Good example shows score 100
+- [ ] FAQ example shows missing schema issue
+- [ ] Evidence panel expands with detector signals
+- [ ] Fix snippets change with target stack
+- [ ] Copy and export work
+- [ ] Evaluation tab loads (if run data exists)
+- [ ] Issue frequency chart displays
+- [ ] Smoke evaluation passes
+- [ ] Baseline create/approve works

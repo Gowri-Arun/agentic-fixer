@@ -17,11 +17,37 @@ from app.evaluation.runner import RetryPolicy, run_evaluation
 from app.services.analysis import analyze_url
 
 
-def _create_analysis_func():
+def _create_analysis_func(render_mode: str = "html-only"):
     """Create an async analysis function for the CLI."""
+    from app.fetcher import FetchInput
+    from app.fetcher_fallback import (
+        FetchFallbackConfig,
+        RenderMode,
+        fetch_with_fallback,
+    )
+
+    mode = RenderMode(render_mode)
 
     async def analysis_func(url: str, target_stack: str):
-        return analyze_url(url, target_stack)
+        if mode == RenderMode.HTML_ONLY:
+            return analyze_url(url, target_stack)
+
+        config = FetchFallbackConfig(mode=mode)
+        fetch_input = FetchInput(url=url)
+        result = fetch_with_fallback(fetch_input, config)
+
+        from urllib.parse import urlparse
+
+        from app.services.analysis import analyze_html
+
+        parsed_url = urlparse(url)
+        location = parsed_url.path or "/"
+        return analyze_html(
+            html=result.html,
+            url=url,
+            location=location,
+            target_stack=target_stack,
+        )
 
     return analysis_func
 
@@ -85,6 +111,15 @@ def _parse_args():
         "--verbose",
         action="store_true",
         help="Verbose output",
+    )
+    parser.add_argument(
+        "--render-mode",
+        choices=["html-only", "auto", "js-rendered"],
+        default="html-only",
+        help=(
+            "Fetch render mode: html-only, "
+            "auto (HTTP with browser fallback), or js-rendered"
+        ),
     )
     return parser.parse_args()
 
@@ -194,6 +229,7 @@ async def main():
         print(f"Concurrency: {args.concurrency}")
         print(f"Max attempts: {args.max_attempts}")
         print(f"Target stack: {args.target_stack}")
+        print(f"Render mode: {args.render_mode}")
         print()
 
     # Create output directory
@@ -203,7 +239,7 @@ async def main():
     policy = RetryPolicy(max_attempts=args.max_attempts)
 
     # Run evaluation
-    analysis_func = _create_analysis_func()
+    analysis_func = _create_analysis_func(args.render_mode)
     start_time = time.monotonic()
 
     try:

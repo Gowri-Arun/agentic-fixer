@@ -109,3 +109,38 @@ class EvaluationRun(BaseModel):
     concurrency: int = 4
     results: list[SiteResult] = Field(default_factory=list)
     summary: RunSummary = Field(default_factory=RunSummary)
+
+
+# --- Baseline models ---
+
+
+class BaselineSiteEntry(BaseModel):
+    """Per-site entry in a baseline manifest."""
+
+    url: str
+    name: str
+    page_type: PageType
+    status: Literal["success", "failure"]
+    score: int | None = None
+    issue_ids: list[str] = Field(default_factory=list)
+    issue_count: int = 0
+    error_category: ErrorCategory | None = None
+
+
+class BaselineManifest(BaseModel):
+    """Compact baseline manifest for regression comparison.
+
+    Stores only the metadata and per-site outcomes needed for
+    comparison — no raw HTML or full detector output.
+    """
+
+    created_at: datetime
+    app_version: str
+    corpus_hash: str
+    corpus_path: str
+    target_stack: str
+    summary: RunSummary
+    sites: list[BaselineSiteEntry] = Field(default_factory=list)
+    approved: bool = False
+    approved_at: datetime | None = None
+    notes: str = ""

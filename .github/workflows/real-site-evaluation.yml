@@ -1,0 +1,318 @@
+name: Real-Site Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      render_mode:
+        description: "Fetch render mode"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - html-only
+          - auto
+      max_sites:
+        description: "Maximum sites to evaluate (empty = all)"
+        required: false
+        default: ""
+        type: string
+      concurrency:
+        description: "Max concurrent analyses"
+        required: false
+        default: "4"
+        type: string
+  schedule:
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: real-site-evaluation
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Run evaluation
+        working-directory: backend
+        env:
+          RENDER_MODE: ${{ inputs.render_mode || 'auto' }}
+          MAX_SITES: ${{ inputs.max_sites || '' }}
+          EVAL_CONCURRENCY: ${{ inputs.concurrency || '4' }}
+        run: |
+          ARGS="--output output/evaluation -v --render-mode $RENDER_MODE"
+          if [ -n "$MAX_SITES" ]; then
+            ARGS="$ARGS --max-sites $MAX_SITES"
+          fi
+          ARGS="$ARGS --concurrency $EVAL_CONCURRENCY"
+          python -m scripts.evaluate_sites $ARGS
+
+      - name: Generate markdown summary
+        if: always()
+        working-directory: backend
+        run: |
+          python - <<'PYEOF'
+          import json, sys
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          output = Path("output/evaluation/latest.json")
+          if not output.exists():
+              print("No evaluation output found, skipping summary")
+              sys.exit(0)
+
+          with open(output) as f:
+              data = json.load(f)
+
+          summary = data.get("summary", {})
+          results = data.get("results", [])
+
+          lines = [
+              "# Real-Site Evaluation Report",
+              "",
+              f"**Run ID:** `{data.get('run_id', 'N/A')}`",
+              f"**Date:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+              f"**Target stack:** {data.get('target_stack', 'N/A')}",
+              f"**Render mode:** {data.get('render_mode', 'N/A')}",
+              "",
+              "## Summary",
+              "",
+              f"| Metric | Value |",
+              f"|--------|-------|",
+              f"| Total sites | {summary.get('total_sites', 0)} |",
+              f"| Successful | {summary.get('successful_sites', 0)} |",
+              f"| Failed | {summary.get('failed_sites', 0)} |",
+              f"| Average score | {summary.get('average_score', 0):.1f} |",
+              f"| Total duration | {summary.get('total_duration_ms', 0) / 1000:.1f}s |",
+              "",
+          ]
+
+          # Scores by page type
+          scores_by_type = summary.get("scores_by_page_type", {})
+          if scores_by_type:
+              lines.append("## Scores by Page Type")
+              lines.append("")
+              lines.append("| Page Type | Average Score |")
+              lines.append("|-----------|---------------|")
+              for pt, score in sorted(scores_by_type.items()):
+                  lines.append(f"| {pt} | {score:.1f} |")
+              lines.append("")
+
+          # Failed sites
+          failed = [r for r in results if r.get("status") == "failure"]
+          if failed:
+              lines.append("## Failed Sites")
+              lines.append("")
+              lines.append("| Name | URL | Error |")
+              lines.append("|------|-----|-------|")
+              for r in failed:
+                  lines.append(
+                      f"| {r.get('name', 'N/A')} | {r.get('url', 'N/A')} "
+                      f"| {r.get('error_message', 'N/A')[:80]} |"
+                  )
+              lines.append("")
+
+          # Top issues
+          issue_counter = {}
+          for r in results:
+              if r.get("status") == "success":
+                  for issue_id in r.get("issue_ids", []):
+                      issue_counter[issue_id] = issue_counter.get(issue_id, 0) + 1
+
+          if issue_counter:
+              lines.append("## Top Issues")
+              lines.append("")
+              lines.append("| Issue ID | Count | Percentage |")
+              lines.append("|----------|-------|------------|")
+              total = summary.get("total_sites", 1)
+              for issue_id, count in sorted(
+                  issue_counter.items(), key=lambda x: -x[1]
+              )[:10]:
+                  pct = count / total * 100
+                  lines.append(f"| {issue_id} | {count} | {pct:.0f}% |")
+              lines.append("")
+
+          report_path = Path("output/evaluation/report.md")
+          report_path.write_text("\n".join(lines))
+          print(f"Report written to {report_path}")
+          PYEOF
+
+      - name: Download previous run for comparison
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: evaluation-latest
+          path: backend/output/evaluation/previous
+        continue-on-error: true
+
+      - name: Generate comparison
+        if: always()
+        working-directory: backend
+        run: |
+          python - <<'PYEOF'
+          import json, sys
+          from pathlib import Path
+
+          current = Path("output/evaluation/latest.json")
+          previous = Path("output/evaluation/previous/latest.json")
+
+          if not current.exists() or not previous.exists():
+              print("Comparison skipped: missing current or previous run")
+              sys.exit(0)
+
+          with open(current) as f:
+              curr = json.load(f)
+          with open(previous) as f:
+              prev = json.load(f)
+
+          curr_by_url = {r["url"]: r for r in curr.get("results", [])}
+          prev_by_url = {r["url"]: r for r in prev.get("results", [])}
+
+          lines = [
+              "# Evaluation Comparison",
+              "",
+              f"**Previous run:** `{prev.get('run_id', 'N/A')}`",
+              f"**Current run:** `{curr.get('run_id', 'N/A')}`",
+              "",
+          ]
+
+          curr_summary = curr.get("summary", {})
+          prev_summary = prev.get("summary", {})
+          curr_avg = curr_summary.get("average_score", 0)
+          prev_avg = prev_summary.get("average_score", 0)
+          delta = curr_avg - prev_avg
+
+          lines.append("## Score Change")
+          lines.append("")
+          lines.append(
+              f"| Metric | Previous | Current | Delta |"
+          )
+          lines.append(
+              f"|--------|----------|---------|-------|"
+          )
+          lines.append(
+              f"| Average score | {prev_avg:.1f} | {curr_avg:.1f} "
+              f"| {delta:+.1f} |"
+          )
+          lines.append(
+              f"| Successful | {prev_summary.get('successful_sites', 0)} "
+              f"| {curr_summary.get('successful_sites', 0)} | "
+              f"{curr_summary.get('successful_sites', 0) - prev_summary.get('successful_sites', 0):+d} |"
+          )
+          lines.append(
+              f"| Failed | {prev_summary.get('failed_sites', 0)} "
+              f"| {curr_summary.get('failed_sites', 0)} | "
+              f"{curr_summary.get('failed_sites', 0) - prev_summary.get('failed_sites', 0):+d} |"
+          )
+          lines.append("")
+
+          # Regressions and improvements
+          regressions = []
+          improvements = []
+          for url, curr_r in curr_by_url.items():
+              prev_r = prev_by_url.get(url)
+              if prev_r is None:
+                  continue
+              if (
+                  curr_r.get("status") == "success"
+                  and prev_r.get("status") == "success"
+              ):
+                  score_delta = curr_r.get("score", 0) - prev_r.get("score", 0)
+                  if score_delta <= -5:
+                      regressions.append((url, curr_r.get("name", ""), score_delta))
+                  elif score_delta >= 5:
+                      improvements.append((url, curr_r.get("name", ""), score_delta))
+
+          if regressions:
+              lines.append("## Regressions (score dropped 5+ points)")
+              lines.append("")
+              lines.append("| Name | URL | Delta |")
+              lines.append("|------|-----|-------|")
+              for url, name, d in sorted(regressions, key=lambda x: x[2]):
+                  lines.append(f"| {name} | {url} | {d:+d} |")
+              lines.append("")
+
+          if improvements:
+              lines.append("## Improvements (score increased 5+ points)")
+              lines.append("")
+              lines.append("| Name | URL | Delta |")
+              lines.append("|------|-----|-------|")
+              for url, name, d in sorted(improvements, key=lambda x: -x[2]):
+                  lines.append(f"| {name} | {url} | {d:+d} |")
+              lines.append("")
+
+          if not regressions and not improvements:
+              lines.append("No significant regressions or improvements detected.")
+              lines.append("")
+
+          report_path = Path("output/evaluation/comparison.md")
+          report_path.write_text("\n".join(lines))
+          print(f"Comparison written to {report_path}")
+          PYEOF
+
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results-${{ github.run_id }}
+          path: |
+            backend/output/evaluation/latest.json
+            backend/output/evaluation/latest.csv
+            backend/output/evaluation/failed_sites.json
+            backend/output/evaluation/report.md
+            backend/output/evaluation/comparison.md
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Update latest artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-latest
+          path: |
+            backend/output/evaluation/latest.json
+            backend/output/evaluation/latest.csv
+            backend/output/evaluation/failed_sites.json
+          retention-days: 90
+          if-no-files-found: warn
+          overwrite: true
+
+      - name: Print summary
+        if: always()
+        working-directory: backend
+        run: |
+          if [ -f output/evaluation/latest.json ]; then
+            python - <<'PYEOF'
+          import json
+          from pathlib import Path
+
+          with open("output/evaluation/latest.json") as f:
+              data = json.load(f)
+          s = data.get("summary", {})
+          print(f"Sites: {s.get('total_sites', 0)} total, "
+                f"{s.get('successful_sites', 0)} ok, "
+                f"{s.get('failed_sites', 0)} failed")
+          print(f"Average score: {s.get('average_score', 0):.1f}")
+          PYEOF
+          else
+            echo "No evaluation output found"
+          fi

@@ -1,0 +1,45 @@
+sites:
+  - name: "GitHub Pricing"
+    url: "https://github.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Visible pricing tiers"
+    tags: [smoke, stable, pricing]
+    enabled: true
+    notes: "Stable SaaS pricing page for smoke testing"
+
+  - name: "Stripe Pricing"
+    url: "https://stripe.com/pricing"
+    page_type: pricing
+    expected_signals:
+      - description: "Transaction-based pricing"
+    tags: [smoke, stable, pricing]
+    enabled: true
+    notes: "Stable payment processor pricing for smoke testing"
+
+  - name: "Wikipedia - Artificial Intelligence"
+    url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
+    page_type: general
+    expected_signals:
+      - description: "Encyclopedia article"
+    tags: [smoke, stable, informational]
+    enabled: true
+    notes: "Extremely stable reference page for smoke testing"
+
+  - name: "MDN Web Docs - JavaScript"
+    url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+    page_type: general
+    expected_signals:
+      - description: "Technical documentation"
+    tags: [smoke, stable, documentation]
+    enabled: true
+    notes: "Stable developer documentation for smoke testing"
+
+  - name: "Basecamp - Project Management"
+    url: "https://basecamp.com/"
+    page_type: service
+    expected_signals:
+      - description: "Product overview"
+    tags: [smoke, stable, service]
+    enabled: true
+    notes: "Stable service page for smoke testing"
