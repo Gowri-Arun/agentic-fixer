@@ -1873,4 +1873,28 @@ button:disabled {
     flex-wrap: wrap;
     gap: 1rem;
   }
+
+  .main-nav {
+    padding: 0 1rem;
+  }
+
+  .nav-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .dashboard-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-stats {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
 }
