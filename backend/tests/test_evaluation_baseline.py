@@ -497,15 +497,16 @@ def test_comparison_resolved_failure():
 
 
 def test_comparison_corpus_changed():
+    corpus_path = Path(__file__).resolve().parent.parent / "evaluation" / "sites.yml"
     baseline = BaselineManifest(
         created_at=datetime.now(timezone.utc),
         app_version="abc",
         corpus_hash="old_hash",
-        corpus_path="evaluation/sites.yml",
+        corpus_path=str(corpus_path),
         target_stack="nextjs-13",
         summary=RunSummary(),
     )
-    current = _make_run()
+    current = _make_run(corpus_path=str(corpus_path))
 
     comp = BaselineComparison(
         baseline=baseline,
@@ -520,15 +521,16 @@ def test_comparison_corpus_changed():
 
 
 def test_comparison_version_changed():
+    corpus_path = Path(__file__).resolve().parent.parent / "evaluation" / "sites.yml"
     baseline = BaselineManifest(
         created_at=datetime.now(timezone.utc),
         app_version="old_version",
         corpus_hash="hash",
-        corpus_path="evaluation/sites.yml",
+        corpus_path=str(corpus_path),
         target_stack="nextjs-13",
         summary=RunSummary(),
     )
-    current = _make_run(app_version="new_version")
+    current = _make_run(app_version="new_version", corpus_path=str(corpus_path))
 
     comp = BaselineComparison(
         baseline=baseline,
